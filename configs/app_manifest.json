@@ -1,0 +1,69 @@
+{
+    "display_information": {
+        "name": "",
+        "description": "",
+        "background_color": "#212226"
+    },
+    "features": {
+        "bot_user": {
+            "display_name": "",
+            "always_online": true
+        }
+    },
+    "oauth_config": {
+        "scopes": {
+            "bot": [
+                "app_mentions:read",
+                "assistant:write",
+                "bookmarks:read",
+                "bookmarks:write",
+                "calls:read",
+                "calls:write",
+                "canvases:read",
+                "canvases:write",
+                "channels:history",
+                "channels:join",
+                "channels:manage",
+                "channels:read",
+                "channels:write.invites",
+                "channels:write.topic",
+                "chat:write",
+                "chat:write.customize",
+                "chat:write.public",
+                "commands",
+                "conversations.connect:manage",
+                "conversations.connect:read",
+                "conversations.connect:write",
+                "dnd:read",
+                "emoji:read",
+                "files:read",
+                "groups:history",
+                "groups:read",
+                "im:history",
+                "im:read",
+                "im:write",
+                "incoming-webhook",
+                "links.embed:write",
+                "links:read",
+                "metadata.message:read",
+                "mpim:history",
+                "mpim:read",
+                "mpim:write",
+                "mpim:write.topic",
+                "pins:read",
+                "reactions:read",
+                "usergroups:read",
+                "users.profile:read",
+                "users:read",
+                "users:read.email",
+                "workflows.templates:read",
+                "team:read"
+            ]
+        }
+    },
+    "settings": {
+        "org_deploy_enabled": true,
+        "socket_mode_enabled": false,
+        "token_rotation_enabled": false
+    }
+}
