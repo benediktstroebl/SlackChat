@@ -6,4 +6,5 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "mcp>=1.2.0",
+    "slack-sdk>=3.34.0",
 ]

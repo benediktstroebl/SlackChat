@@ -1,18 +1,33 @@
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 class Slack: 
+    name: str = "Slack SDK for MCP."
     description: str = "Slack SDK for MCP."
-    def __init__(self, slack_client_id: str, slack_client_secret: str, slack_channel_id: str, slack_bot_token: str, always_add_users: list[str]):
+
+    def __init__(self, slack_client_id: str=None, slack_client_secret: str=None, slack_channel_id: str=None, slack_bot_token: str=None, always_add_users: list[str]=None):
+        if slack_client_id is None:
+            slack_client_id = os.getenv("SLACK_CLIENT_ID")
+        if slack_client_secret is None:
+            slack_client_secret = os.getenv("SLACK_CLIENT_SECRET")
+        if slack_channel_id is None:
+            slack_channel_id = os.getenv("SLACK_CHANNEL_ID")
+        if slack_bot_token is None:
+            slack_bot_token = os.getenv("SLACK_BOT_TOKEN")
         self.environment_vars = {
-            "slack_client_id": slack_client_id,
+            "slack_client_id": slack_client_id, 
             "slack_client_secret": slack_client_secret,
             "slack_channel_id": slack_channel_id,
             "slack_bot_token": slack_bot_token
         }
         # users to always add to all the conversations and channels 
         self.always_add_users = always_add_users
-        self.client = WebClient(token=self.environment_vars["slack_bot_token"])
+        self.client = WebClient(token=slack_bot_token)
 
     def read(self, channel_id: str, limit: int = 100):
         # return all messages the MCP server should handle which messages are new
@@ -26,7 +41,7 @@ class Slack:
             print(f"Error: {e}")
             return []
 
-    def check_on_going_dms(self, conversation_types: str = "im,mpim"):
+    def check_ongoing_dms(self, conversation_types: str = "im,mpim"):
         """
         Lists all active conversations 
         """
@@ -38,33 +53,81 @@ class Slack:
             print(f"Error: {e}")
             return []
 
-    def send_messsage(self, message: str, sending_bot_id: str, target_channel_id: str):
+    def send_messsage(self, message: str, target_channel_id: str):
         try:
             response = self.client.chat_postMessage(
                 channel=target_channel_id,
                 text=message,
-                thread_ts=sending_bot_id
             )
             return response 
         except SlackApiError as e:
             print(f"Error: {e}")
             return []
 
-    def create_app(self):
+    def create_app(self, app_name: str, app_description: str, manifest_path: str = "configs/manifest.json"):
         # apps.manifest.create()
-        pass 
+        # TODO: think about how best to handle permissions. currently, the bot_id is making this app. but what do we do on the preliminary init. 
+        manifest = self._prepare_manifest(manifest_path, app_name, app_description)
+        response = self.client.apps_manifest_create(
+            manifest=manifest
+        )
+        return response 
 
-    def create_channel(self):
+    def create_channel(self, channel_name: str, is_private: bool = False):
         # channels.create()
-        pass 
+        # registry should be updated with the channel id
+        try:
+            response = self.client.conversations_create(
+                name=channel_name,
+                is_private=is_private
+            )
+            return response
+        except SlackApiError as e:
+            # Check if error is due to channel already existing
+            if e.response['error'] == 'name_taken':
+                # Get list of channels to find the ID of the existing channel
+                try:
+                    response = self.client.conversations_list()
+                    for channel in response['channels']:
+                        if channel['name'] == channel_name:
+                            return {'channel': channel}
+                except SlackApiError as list_error:
+                    print(f"Error listing channels: {list_error}")
+                    return []
+            print(f"Error: {e}")
+            return []
+    
+    def add_user_to_channel(self, channel_id: str, user_id: str):
+        # channels.invite()
+        try:
+            response = self.client.conversations_invite(channel=channel_id, users=user_id)
+            return response 
+        except SlackApiError as e:
+            print(f"Error: {e}")
+            return []
 
-    def open_conversation(self):
+    def open_conversation(self, user_ids: list[str]):
         # unlike a channel this opens a conversation with a user. 
-        pass 
+        try:
+            response = self.client.conversations_open(users=user_ids + self.always_add_users)
+            return response 
+        except SlackApiError as e:
+            print(f"Error: {e}")
+            return []
 
     def get_channel_info(self):
         # channels.info()
         pass 
+
+    
+    @staticmethod
+    def _prepare_manifest(manifest_path: str, app_name: str, app_description: str):
+        with open(manifest_path, "r") as file:
+            manifest = json.load(file)
+        manifest["display_information"]["name"] = app_name
+        manifest["display_information"]["description"] = app_description
+        manifest["features"]["bot_user"]["display_name"] = app_name
+        return manifest 
 
     def reply(self):
         # chat.postMessage()
@@ -77,7 +140,19 @@ class Slack:
     def react(self):
         pass 
 
-    def delete(self):
-        # chat.delete()
-        # optionally delete the chat messages 
+    def delete_channel_history(self, channel_id: str):
+        # this will again be a command line feature hopefully
         pass 
+
+if __name__ == "__main__":
+
+    slack = Slack(always_add_users=["U0882ARL0J2"])
+    response = slack.open_conversation(["U087UDCK5D5"])
+    channel_id = response['channel']['id']
+    slack.send_messsage("giraffe is apologetic for the spam!", channel_id)
+
+    resp = slack.create_channel("test3")
+    channel_id = resp['channel']['id']
+    slack.add_user_to_channel(channel_id, ["U087UDCK5D5", "U0882ARL0J2"])
+    slack.send_messsage("giraffe is apologetic for the spam!", channel_id)
+    slack.read(channel_id)
