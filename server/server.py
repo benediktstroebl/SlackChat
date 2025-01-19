@@ -46,6 +46,8 @@ from mcp.types import (
     Tool as MCPTool,
 )
 
+from .registry.registry import Registry
+
 logger = get_logger(__name__)
 
 
@@ -101,6 +103,7 @@ class SlackMCP:
         self._prompt_manager = PromptManager(
             warn_on_duplicate_prompts=self.settings.warn_on_duplicate_prompts
         )
+        self._registry = Registry()
         self.dependencies = self.settings.dependencies
 
         # Set up MCP protocol handlers
@@ -142,9 +145,13 @@ class SlackMCP:
         self._mcp_server.get_prompt()(self.get_prompt)
         self._mcp_server.list_resource_templates()(self.list_resource_templates)
 
-    async def list_tools(self) -> list[MCPTool]:
+    async def list_tools(self, agent_name: str = None) -> list[MCPTool]:
         """List all available tools."""
         tools = self._tool_manager.list_tools()
+        
+        if agent_name:
+            tools = [tool for tool in tools if tool.name in self._registry.get_agent_tools(agent_name)]
+        
         return [
             MCPTool(
                 name=info.name,
@@ -164,11 +171,20 @@ class SlackMCP:
         except LookupError:
             request_context = None
         return Context(request_context=request_context, fastmcp=self)
+    
+    async def test(self, message: str) -> str:
+        """Test the server."""
+        return f"Test message: {message}"
 
     async def call_tool(
-        self, name: str, arguments: dict
+        self, name: str, arguments: dict, agent_name: str = None
     ) -> Sequence[TextContent | ImageContent | EmbeddedResource]:
         """Call a tool by name with arguments."""
+        if agent_name:
+            if name not in self._registry.get_agent_tools(agent_name):
+                return [TextContent(type="text", text="This tool is not available!")]
+            
+        
         context = self.get_context()
         result = await self._tool_manager.call_tool(name, arguments, context=context)
         converted_result = _convert_to_content(result)
@@ -227,6 +243,10 @@ class SlackMCP:
             name: Optional name for the tool (defaults to function name)
             description: Optional description of what the tool does
         """
+        # by default, register the tool for all agents in the world
+        for agent_name in self._registry.get_all_agents():
+            self._registry.register_tool(agent_name, name)
+            
         self._tool_manager.add_tool(fn, name=name, description=description)
 
     def tool(self, name: str | None = None, description: str | None = None) -> Callable:
@@ -552,13 +572,13 @@ class Context(BaseModel):
     """
 
     _request_context: RequestContext | None
-    _fastmcp: FastMCP | None
+    _fastmcp: SlackMCP | None
 
     def __init__(
         self,
         *,
         request_context: RequestContext | None = None,
-        fastmcp: FastMCP | None = None,
+        fastmcp: SlackMCP | None = None,
         **kwargs: Any,
     ):
         super().__init__(**kwargs)
@@ -566,7 +586,7 @@ class Context(BaseModel):
         self._fastmcp = fastmcp
 
     @property
-    def fastmcp(self) -> FastMCP:
+    def fastmcp(self) -> SlackMCP:
         """Access to the FastMCP server."""
         if self._fastmcp is None:
             raise ValueError("Context is not available outside of a request")
