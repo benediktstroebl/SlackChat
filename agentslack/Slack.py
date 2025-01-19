@@ -3,6 +3,7 @@ from slack_sdk.errors import SlackApiError
 
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 
@@ -64,7 +65,7 @@ class Slack:
             print(f"Error: {e}")
             return []
 
-    def create_app(self, app_name: str, app_description: str, manifest_path: str = "configs/manifest.json"):
+    def create_app(self, app_name: str, app_description: str, manifest_path: str = "configs/app_manifest.json"):
         # apps.manifest.create()
         # TODO: think about how best to handle permissions. currently, the bot_id is making this app. but what do we do on the preliminary init. 
         manifest = self._prepare_manifest(manifest_path, app_name, app_description)
