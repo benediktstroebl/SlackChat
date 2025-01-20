@@ -9,11 +9,14 @@ class Client:
         self.host = host
         self.port = port
         self.base_url = f"http://{host}:{port}"
+        self.server = None
         
-        # Create and start server with same configuration
-        self.server = Server()
+
+    def start(self):
+        """Start a new server instance"""
+        self.server = Server(host=self.host, port=self.port)
         self.server.start()
-        
+
     def list_tools(self) -> List[Dict[str, Any]]:
         """List all available tools"""
         response = requests.get(f"{self.base_url}/tools")
@@ -45,7 +48,7 @@ class Client:
 
         print(response.json())
         return response.json()
-
+    
     def stop(self):
         """Stop the server"""
         if self.server:

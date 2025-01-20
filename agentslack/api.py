@@ -23,8 +23,10 @@ class AgentRegistration(BaseModel):
     world_name: str
 
 class Server:
-    def __init__(self):
+    def __init__(self, host: str = "0.0.0.0", port: int = 8080):
         self.app = FastAPI()
+        self.host = host
+        self.port = port
         self.registry = Registry()
         self.tools = {
             "send_dm": Tool(
@@ -183,6 +185,7 @@ class Server:
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 channel_id = self.registry.get_channel(parameters["channel_name"]).slack_id
                 response = slack_client.read(channel_id=channel_id)
+                agent = self.registry.get_agent(parameters["your_name"])
                 world_start_datetime = self.registry.get_world(agent.world_name).start_datetime
                 # restrict to messages after the world start datetime 
                 messages = response['messages']
@@ -317,13 +320,13 @@ class Server:
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
     
-    def start(self, host: str = "0.0.0.0", port: int = 8080):
+    def start(self):
         """Start the server in a background thread"""
         if self.server_thread is not None:
             return  # Server already running
             
         def run_server():
-            uvicorn.run(self.app, host=host, port=port)
+            uvicorn.run(self.app, host=self.host, port=self.port)
             
         self.server_thread = threading.Thread(target=run_server)
         self.server_thread.daemon = True
