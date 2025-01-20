@@ -75,6 +75,14 @@ class Server:
                 parameters={
                     "agent_name": "string"
                 }
+            ),
+            "create_channel": Tool(
+                name="create_channel",
+                description="Create a new channel",
+                parameters={
+                    "your_name": "string",
+                    "channel_name": "string",
+                }
             )
         }
         self.server_thread = None
@@ -133,6 +141,7 @@ class Server:
                 raise HTTPException(status_code=404, detail="Tool not found")
                 
             if tool_name == "send_dm":
+                print("PARAMETERS", parameters)
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 id_of_recipient = self.registry.get_agent(parameters["recipient_name"]).slack_app.slack_id
                 
@@ -271,9 +280,9 @@ class Server:
 
             
             elif tool_name == "create_channel":
-                response = self.slack.create_channel(
+                slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
+                response = slack_client.create_channel(
                     channel_name=parameters["channel_name"],
-                    is_private=parameters["is_private"]
                 )
                 return response
             
