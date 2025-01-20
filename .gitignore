@@ -2,3 +2,5 @@
 .python-version
 uv.lock
 **/__pycache__/**
+*.jsonl
+slack_config.json
