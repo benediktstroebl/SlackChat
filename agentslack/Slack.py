@@ -11,24 +11,22 @@ class Slack:
     name: str = "Slack SDK for MCP."
     description: str = "Slack SDK for MCP."
 
-    def __init__(self, slack_client_id: str=None, slack_client_secret: str=None, slack_channel_id: str=None, slack_bot_token: str=None, always_add_users: list[str]=None):
+    def __init__(self, slack_client_id: str=None, slack_client_secret: str=None, slack_channel_id: str=None, slack_token: str=None, always_add_users: list[str]=None):
         if slack_client_id is None:
             slack_client_id = os.getenv("SLACK_CLIENT_ID")
         if slack_client_secret is None:
             slack_client_secret = os.getenv("SLACK_CLIENT_SECRET")
         if slack_channel_id is None:
             slack_channel_id = os.getenv("SLACK_CHANNEL_ID")
-        if slack_bot_token is None:
-            slack_bot_token = os.getenv("SLACK_BOT_TOKEN")
         self.environment_vars = {
             "slack_client_id": slack_client_id, 
             "slack_client_secret": slack_client_secret,
             "slack_channel_id": slack_channel_id,
-            "slack_bot_token": slack_bot_token
+            "slack_token": slack_token
         }
         # users to always add to all the conversations and channels 
         self.always_add_users = always_add_users
-        self.client = WebClient(token=slack_bot_token)
+        self.client = WebClient(token=slack_token)
 
     def read(self, channel_id: str, limit: int = 100):
         # return all messages the MCP server should handle which messages are new
@@ -37,7 +35,7 @@ class Slack:
                 channel=channel_id,
                 limit=limit
             )
-            return response 
+            return response.data
         except SlackApiError as e:
             print(f"Error: {e}")
             return []
@@ -48,8 +46,16 @@ class Slack:
         """
         try:
             response = self.client.conversations_list(types=conversation_types)
-            return response 
+            return response.data
 
+        except SlackApiError as e:
+            print(f"Error: {e}")
+            return []
+        
+    def get_channel_members(self, channel_id: str):
+        try:
+            response = self.client.conversations_members(channel=channel_id)
+            return response.data
         except SlackApiError as e:
             print(f"Error: {e}")
             return []
@@ -72,7 +78,7 @@ class Slack:
         response = self.client.apps_manifest_create(
             manifest=manifest
         )
-        return response 
+        return response.data
 
     def create_channel(self, channel_name: str, is_private: bool = False):
         # channels.create()
@@ -82,7 +88,7 @@ class Slack:
                 name=channel_name,
                 is_private=is_private
             )
-            return response
+            return response.data
         except SlackApiError as e:
             # Check if error is due to channel already existing
             if e.response['error'] == 'name_taken':
@@ -97,12 +103,20 @@ class Slack:
                     return []
             print(f"Error: {e}")
             return []
+        
+    def list_channels(self):
+        try:
+            response = self.client.conversations_list()
+            return response.data
+        except SlackApiError as e:
+            print(f"Error: {e}")
+            return []
     
     def add_user_to_channel(self, channel_id: str, user_id: str):
         # channels.invite()
         try:
             response = self.client.conversations_invite(channel=channel_id, users=user_id)
-            return response 
+            return response.data
         except SlackApiError as e:
             print(f"Error: {e}")
             return []
@@ -112,6 +126,7 @@ class Slack:
         try:
             response = self.client.conversations_open(users=user_ids + self.always_add_users)
             return response 
+        
         except SlackApiError as e:
             print(f"Error: {e}")
             return []
@@ -149,6 +164,7 @@ if __name__ == "__main__":
 
     slack = Slack(always_add_users=["U0882ARL0J2"])
     response = slack.open_conversation(["U087UDCK5D5"])
+    print(json.loads(json.dumps(response.data)))
     channel_id = response['channel']['id']
     slack.send_messsage("giraffe is apologetic for the spam!", channel_id)
 
@@ -156,4 +172,5 @@ if __name__ == "__main__":
     channel_id = resp['channel']['id']
     slack.add_user_to_channel(channel_id, ["U087UDCK5D5", "U0882ARL0J2"])
     slack.send_messsage("giraffe is apologetic for the spam!", channel_id)
-    slack.read(channel_id)
+    msg = slack.read(channel_id)
+    print(msg)

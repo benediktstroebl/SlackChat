@@ -5,14 +5,13 @@ from .api import Tool, Server
 class Client:
     def __init__(self, 
                  host: str = "localhost", 
-                 port: int = 8000,
-                 slack_config: Optional[Dict[str, str]] = None):
+                 port: int = 8000):
         self.host = host
         self.port = port
         self.base_url = f"http://{host}:{port}"
         
         # Create and start server with same configuration
-        self.server = Server(slack_config=slack_config)
+        self.server = Server()
         self.server.start()
         
     def list_tools(self) -> List[Dict[str, Any]]:
@@ -26,8 +25,27 @@ class Client:
             f"{self.base_url}/tools/{tool_name}",
             json=parameters
         )
+        print('response for debugging', response)
         return response.json()
-        
+
+    def register_world(self, world_name: str) -> None: 
+        response = requests.post(
+            f"{self.base_url}/register_world",
+            json={"world_name": world_name}
+        )
+        if response.status_code != 200:
+            print(f"Error: {response.json()}")
+        return response.json()
+    
+    def register_agent(self, agent_name: str, world_name: str) -> None:
+        response = requests.post(
+            f"{self.base_url}/register_agent",
+            json={"agent_name": agent_name, "world_name": world_name}
+        )
+
+        print(response.json())
+        return response.json()
+
     def stop(self):
         """Stop the server"""
         if self.server:

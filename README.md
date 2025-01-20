@@ -16,7 +16,7 @@ import os
 
 # Configure Slack settings
 slack_config = {
-    "slack_bot_token": os.getenv("SLACK_BOT_TOKEN"),
+    "slack_token": os.getenv("slack_token"),
     "slack_client_id": os.getenv("SLACK_CLIENT_ID"),
     "slack_client_secret": os.getenv("SLACK_CLIENT_SECRET"),
     "slack_channel_id": os.getenv("SLACK_CHANNEL_ID")
