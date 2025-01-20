@@ -2,13 +2,14 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
 from uuid import UUID, uuid4
-from agentslack.slack import Slack
+from agentslack.Slack import Slack
 from agentslack.registry import Registry
 import threading
 import uvicorn
 import time
-from agentslack.types import Message
+from agentslack.types import Message, Channel
 from dataclasses import asdict
+
 
 class Tool(BaseModel):
     name: str
@@ -53,6 +54,13 @@ class Server:
                     "sender_name": "string",
                 }
             ),
+            "check_new_messages": Tool(
+                name="check_new_messages",
+                description="Check if there are new messages across all channels and dms",
+                parameters={
+                    "your_name": "string"
+                }
+            ),
             "read_channel": Tool(
                 name="read_channel",
                 description="Read a channel",
@@ -72,11 +80,48 @@ class Server:
         self.server_thread = None
         self._setup_routes()
 
-    @staticmethod
-    def only_show_new_messages(agent_name: str, channel_id: str, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def only_show_new_messages(self, agent_name: str, channel_id: str, messages: List[Message]) -> List[Message]:
         # filter based on messages the agent has already seen
-        pass 
+        # take in a new list of messages from a channel
+        # filter the messages that were not in the previous agent set of messages
+        # return the new messages
+        agent = self.registry.get_agent(agent_name)
+        
+        previous_messages = agent.read_messages.get(channel_id, [])
+        print(f"[DEBUG] Previous messages: {previous_messages}")
+        new_messages = [msg for msg in messages if msg not in previous_messages]
+        return new_messages
     
+    def update_channels(self, agent_name: str) -> None:
+        agent = self.registry.get_agent(agent_name)
+        # Get ongoing DMs and regular channels
+        ongoing_dms = agent.slack_client.check_ongoing_dms()
+        channels = agent.slack_client.list_channels()
+        # Combine both DMs and regular channels
+        all_channels = []
+        existing_channel_ids = set()
+        
+        if ongoing_dms.get('channels'):
+            for channel in ongoing_dms['channels']:
+                if channel['id'] not in existing_channel_ids:
+                    all_channels.append(Channel(slack_id=channel['id'], name="dm"))
+                    existing_channel_ids.add(channel['id'])
+                    
+        if channels.get('channels'):
+            for channel in channels['channels']:
+                if channel['id'] not in existing_channel_ids:
+                    all_channels.append(Channel(slack_id=channel['id'], name=channel['name']))
+                    existing_channel_ids.add(channel['id'])
+            
+        # Update agent's channels with the combined list
+        agent.channels = all_channels
+
+    def _update_agent_read_messages(self, agent_name: str, channel_id: str, messages: List[Message]) -> None:
+        agent = self.registry.get_agent(agent_name)
+        # append any message in messages that's not already in the agent's read_messages
+        agent.read_messages[channel_id].extend([Message(message=message.message, channel_id=message.channel_id, user_id=message.user_id, timestamp=message.timestamp) for message in messages if message not in agent.read_messages[channel_id]])
+
+
     def _setup_routes(self):
         @self.app.get("/tools")
         async def list_tools():
@@ -101,7 +146,8 @@ class Server:
                     message=parameters["message"],
                     target_channel_id=channel_id
                 )
-                
+                # update the agent's channel with this message
+                self._update_agent_read_messages(parameters["your_name"], channel_id, [Message(message=parameters["message"], channel_id=channel_id, user_id=parameters["your_name"], timestamp=time.time())])
                 return str(response)
             
             elif tool_name == "send_broadcast":
@@ -130,47 +176,106 @@ class Server:
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 channel_id = self.registry.get_channel(parameters["channel_name"]).slack_id
                 response = slack_client.read(channel_id=channel_id)
-                print("TYPE OF RESPONSE", type(response))
-                print("RAP GOD", response)
-                messages = [asdict(Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'])) for message in response['messages']]
-                # messages = self.only_show_new_messages(parameters["your_name"], channel_id, messages)
+                world_start_datetime = self.registry.get_world(agent.world_name).start_datetime
+                # restrict to messages after the world start datetime 
+                messages = response['messages']
+                messages = [msg for msg in messages if msg['ts'] > world_start_datetime]
+                messages = [Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts']) for message in messages]
+                # update the agent's channel with these messages
+                self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
                 return messages
             
             elif tool_name == "read_dm":
+                # DMs for now are only between two agents (plus humans)
                 total_users = len(self.registry.get_humans()) + 2
 
-                print(self.registry.get_all_agents())
-
+                # get the main agent 
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 sender_name = parameters["sender_name"]
-                sender_id = self.registry.get_agent(sender_name).slack_app.slack_id
+
+                # get the ids, needed for communication with slack 
+                sender_agent = self.registry.get_agent(sender_name)
+                sender_id = sender_agent.slack_app.slack_id
+
                 receiver_id = self.registry.get_agent(parameters["your_name"]).slack_app.slack_id
                 # loop over channels from the agent 
                 channels = slack_client.check_ongoing_dms()
                 for channel in channels['channels']:
                     members = slack_client.get_channel_members(channel['id'])['members']
                     if len(members) == total_users:
+                        # make sure both the sender and receiver are in the channel 
                         if (sender_id in members) and (receiver_id in members):
-                            
-
                             channel_id = channel['id']
                             break
                 response = slack_client.read(channel_id=channel_id)
+                
+                self._update_agent_read_messages(parameters["your_name"], channel_id, response['messages'])
 
-                messages = [asdict(Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'])) for message in response['messages']]
-                # messages = self.only_show_new_messages(parameters["your_name"], channel_id, messages)
+                messages = response['messages']
+                world_start_datetime = self.registry.get_world(sender_agent.world_name).start_datetime
+                # restrict to messages after the world start datetime 
+                messages = [msg for msg in messages if msg['ts'] >= world_start_datetime]
+
+                messages = [asdict(Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'])) for message in messages]
+
+                # update the agent's channel with these messages
+                self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
                 return messages
             
             elif tool_name == "check_ongoing_dms":
                 response = self.slack.check_ongoing_dms()
-                return {"status": "success", "response": str(response)}
+                return response
+            
+            elif tool_name == "check_new_messages":
+                # return all channels and dms the user is a part of 
+                # ensure the timestamp of the messages is greater than 
+                # the start of the world 
+                agent = self.registry.get_agent(parameters["your_name"])
+                agent_id = agent.slack_app.slack_id
+                world_start_datetime = self.registry.get_world(agent.world_name).start_datetime
+                print(f"[DEBUG] World start datetime: {world_start_datetime}")
+                self.update_channels(parameters["your_name"])
+                channels = agent.channels
+                channel_ids = [channel.slack_id for channel in channels]
+
+                channel_ids_with_agent = []
+                for channel_id in channel_ids:
+                    members = agent.slack_client.get_channel_members(channel_id)['members']
+                    if agent_id in members:
+                        channel_ids_with_agent.append(channel_id)
+
+                all_new_messages = []
+                print(f"[DEBUG] Channel IDs with agent: {channel_ids_with_agent}")
+                for i, channel_id in enumerate(channel_ids_with_agent):
+                    messages = agent.slack_client.read(channel_id)['messages']
+
+                    # filter to make sure the messages are after the world start datetime
+                    msgs_after = [msg for msg in messages if msg['ts'].split('.')[0] >= str(world_start_datetime)]
+
+                    print(world_start_datetime)
+
+                    msgs_after = [Message(message=message['text'], channel_id=channel_ids_with_agent[i], user_id=message['user'], timestamp=message['ts'].split('.')[0]) for message in msgs_after]
+                    
+                    if len(msgs_after) == 0:
+                        continue
+    
+                    print(f"[DEBUG] All messages after conversion: {len(msgs_after)}")
+
+                    # filter out messages that the agent has already seen
+                    new_messages = self.only_show_new_messages(parameters["your_name"], channel_ids_with_agent[i], msgs_after)
+                    print(f"[DEBUG] New messages after filtering: {len(new_messages)}")
+                    all_new_messages.append(new_messages)
+                    self._update_agent_read_messages(parameters["your_name"], channel_ids_with_agent[i], new_messages)
+                return all_new_messages
+
+
             
             elif tool_name == "create_channel":
                 response = self.slack.create_channel(
                     channel_name=parameters["channel_name"],
                     is_private=parameters["is_private"]
                 )
-                return {"status": "success", "response": str(response)}
+                return response
             
             elif tool_name == "add_user_to_channel":
                 response = self.slack.add_user_to_channel(
@@ -183,7 +288,7 @@ class Server:
                 response = self.slack.open_conversation(
                     user_ids=parameters["user_ids"]
                 )
-                return {"status": "success", "response": str(response)}
+                return response
 
             raise HTTPException(status_code=400, detail="Tool execution failed")
 

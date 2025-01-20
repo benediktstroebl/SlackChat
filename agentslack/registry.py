@@ -1,7 +1,7 @@
 import os 
 import json 
 from typing import Dict, Set, Optional, List 
-from dataclasses import dataclass, field
+from datetime import datetime
 from agentslack.Slack import Slack
 from agentslack.types import Agent, Channel, World, Message, SlackApp
 
@@ -49,7 +49,7 @@ class Registry:
         """Register a new world. Raises DuplicateWorldError if name already exists."""
         if world_name in self._world_name_mapping:
             raise DuplicateWorldError(f"World '{world_name}' already exists")
-        self._world_name_mapping[world_name] = World()
+        self._world_name_mapping[world_name] = World(start_datetime=str(int(datetime.now().timestamp())))
         self.world_token = self._slack_apps[0].slack_token
 
         self.world_client = Slack(slack_token=self.world_token, always_add_users=self._always_add_users)
