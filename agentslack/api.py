@@ -8,7 +8,6 @@ import threading
 import uvicorn
 import time
 from agentslack.types import Message, Channel
-from dataclasses import asdict
 
 
 class Tool(BaseModel):
@@ -141,7 +140,6 @@ class Server:
                 raise HTTPException(status_code=404, detail="Tool not found")
                 
             if tool_name == "send_dm":
-                print("PARAMETERS", parameters)
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 id_of_recipient = self.registry.get_agent(parameters["recipient_name"]).slack_app.slack_id
                 
@@ -157,7 +155,7 @@ class Server:
                 )
                 # update the agent's channel with this message
                 self._update_agent_read_messages(parameters["your_name"], channel_id, [Message(message=parameters["message"], channel_id=channel_id, user_id=parameters["your_name"], timestamp=time.time(), agent_name=parameters["your_name"])])
-                return str(response)
+                return response
             
             elif tool_name == "send_broadcast":
                 # send message to a channel 
@@ -166,18 +164,18 @@ class Server:
                 channels = self.registry.get_agent(parameters["your_name"]).channels
                 channel_names = [channel.name for channel in channels]
                 if channel_name not in channel_names:
-                    response = "sorry this channel doesn't exist"
-                    # TODO feature coming soon 
+                    response = "Sorry this channel doesn't exist, you can create a new channel with the create_channel tool."
+                    response += "Here is a list of all the channels you have access to: " + str(channel_names)
                 else: 
                     channel_id = self.registry.get_channel(channel_name).slack_id
                     response = slack_client.send_messsage(
                         message=parameters["message"],
                         target_channel_id=channel_id
                     )
-                return str(response)
+                return response
 
             elif tool_name == "list_channels":
-                slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
+                slack_client = self.registry.get_agent(parameters["your_name"]).slack_client    
                 response = slack_client.list_channels()
                 return response['channels']
             
@@ -217,8 +215,10 @@ class Server:
                             channel_id = channel['id']
                             break
                 response = slack_client.read(channel_id=channel_id)
-                
-                self._update_agent_read_messages(parameters["your_name"], channel_id, response['messages'])
+                messages = []
+                for message in response['messages']:
+                    messages.append(Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'], agent_name=self.registry.get_agent_name_from_id(message['user'])))
+                self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
 
                 messages = response['messages']
                 world_start_datetime = self.registry.get_world(sender_agent.world_name).start_datetime
