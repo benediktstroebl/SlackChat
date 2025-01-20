@@ -96,6 +96,9 @@ class Registry:
 
     def get_agent_name_from_id(self, slack_app_id: str) -> str:
         return self._app_agent_mapping[slack_app_id]
+    
+    def get_world_starttime_of_agent(self, agent_name: str) -> str:
+        return self._world_name_mapping[self._agent_name_mapping[agent_name].world_name].start_datetime
 
     def get_agent(self, agent_name: str) -> Agent:
         return self._agent_name_mapping[agent_name]
