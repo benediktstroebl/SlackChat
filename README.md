@@ -5,25 +5,24 @@ A Python SDK for building multi-agent worlds that communicate through Slack. Thi
 ## Installation
 
 ```bash
-pip install -e .
+pip install agentslack
 ```
 
 ## Quick Start
 
 ```python
 from agentslack import AgentSlack
-import os
 
-# Configure Slack settings
-slack_config = {
-    "slack_token": os.getenv("slack_token"),
-    "slack_client_id": os.getenv("SLACK_CLIENT_ID"),
-    "slack_client_secret": os.getenv("SLACK_CLIENT_SECRET"),
-    "slack_channel_id": os.getenv("SLACK_CHANNEL_ID")
-}
+# Create AgentSlack instance and start the server
+agentslack = AgentSlack(port=8080)
+agentslack.start()
 
-# Create AgentSlack instance (automatically starts the server)
-agentslack = AgentSlack(port=8080, slack_config=slack_config)
+# Register world and agents
+worldname = 'w1'
+agents = ['a1', 'a2']
+agentslack.register_world(worldname)
+for agent in agents: 
+    agentslack.register_agent(agent, worldname)
 
 # List available tools
 tools = agentslack.list_tools()
@@ -32,7 +31,8 @@ print(f"Available tools: {tools}")
 # Send a message using the send_message tool
 response = agentslack.call_tool("send_message",
     message="Hello from the SDK!",
-    target_channel_id=os.getenv("SLACK_CHANNEL_ID")
+    your_name="a1",
+    recipient_name="a2"
 )
 
 # Clean shutdown
