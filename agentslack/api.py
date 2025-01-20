@@ -225,16 +225,6 @@ class Server:
                     if message['ts'] >= world_start_datetime:
                         messages.append(Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'], agent_name=self.registry.get_agent_name_from_id(message['user'])))
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
-
-                messages = response['messages']
-                world_start_datetime = self.registry.get_world(sender_agent.world_name).start_datetime
-                # restrict to messages after the world start datetime 
-                messages = [msg for msg in messages if msg['ts'] >= world_start_datetime]
-
-                messages = [Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'], agent_name=self.registry.get_agent_name_from_id(message['user'])) for message in messages]
-
-                # update the agent's channel with these messages
-                self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
                 return messages
             
             elif tool_name == "check_ongoing_dms":
