@@ -203,7 +203,7 @@ class Server:
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 sender_name = parameters["sender_name"]
 
-                world_start_datetime = self.registry.get_world(sender_name).start_datetime
+                world_start_datetime = self.registry.get_world_starttime_of_agent(sender_name)
 
                 # get the ids, needed for communication with slack 
                 sender_agent = self.registry.get_agent(sender_name)
