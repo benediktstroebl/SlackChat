@@ -85,8 +85,17 @@ class Registry:
                                                      slack_app=new_app, 
                                                      slack_client=self._agent_slack_clients[agent_name],
                                                      channels=self._world_name_mapping[world_name].channels)
-        self._agent_app_mapping[agent_name] = new_app.slack_token
-        self._app_agent_mapping[new_app.slack_token] = agent_name
+        
+        # TODO: change this so we don't have to do so many calls to slack 
+        # e.g., sometimes the user is already in the channel.
+        for channel in self._world_name_mapping[world_name].channels:
+            self._agent_name_mapping[agent_name].slack_client.add_user_to_channel(channel.slack_id, new_app.slack_id)
+
+        self._agent_app_mapping[agent_name] = new_app.slack_id
+        self._app_agent_mapping[new_app.slack_id] = agent_name
+
+    def get_agent_name_from_id(self, slack_app_id: str) -> str:
+        return self._app_agent_mapping[slack_app_id]
 
     def get_agent(self, agent_name: str) -> Agent:
         return self._agent_name_mapping[agent_name]

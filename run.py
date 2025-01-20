@@ -87,6 +87,13 @@ channels = agentslack.call_tool("send_dm",
     message="Slack GOD"
 )
 
+channels = agentslack.call_tool("send_broadcast",
+    your_name="a1",
+    message="Slack GO2D",
+    channel_name="test3"
+)
+
+
 channels = agentslack.call_tool("list_channels",
     your_name="a1"
 )

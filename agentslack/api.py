@@ -127,7 +127,7 @@ class Server:
     def _update_agent_read_messages(self, agent_name: str, channel_id: str, messages: List[Message]) -> None:
         agent = self.registry.get_agent(agent_name)
         # append any message in messages that's not already in the agent's read_messages
-        agent.read_messages[channel_id].extend([Message(message=message.message, channel_id=message.channel_id, user_id=message.user_id, timestamp=message.timestamp) for message in messages if message not in agent.read_messages[channel_id]])
+        agent.read_messages[channel_id].extend([message for message in messages if message not in agent.read_messages[channel_id]])
 
 
     def _setup_routes(self):
@@ -156,7 +156,7 @@ class Server:
                     target_channel_id=channel_id
                 )
                 # update the agent's channel with this message
-                self._update_agent_read_messages(parameters["your_name"], channel_id, [Message(message=parameters["message"], channel_id=channel_id, user_id=parameters["your_name"], timestamp=time.time())])
+                self._update_agent_read_messages(parameters["your_name"], channel_id, [Message(message=parameters["message"], channel_id=channel_id, user_id=parameters["your_name"], timestamp=time.time(), agent_name=parameters["your_name"])])
                 return str(response)
             
             elif tool_name == "send_broadcast":
@@ -225,7 +225,7 @@ class Server:
                 # restrict to messages after the world start datetime 
                 messages = [msg for msg in messages if msg['ts'] >= world_start_datetime]
 
-                messages = [asdict(Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'])) for message in messages]
+                messages = [Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'], agent_name=self.registry.get_agent_name_from_id(message['user'])) for message in messages]
 
                 # update the agent's channel with these messages
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
@@ -261,20 +261,17 @@ class Server:
                     # filter to make sure the messages are after the world start datetime
                     msgs_after = [msg for msg in messages if msg['ts'].split('.')[0] >= str(world_start_datetime)]
 
-                    print(world_start_datetime)
-
-                    msgs_after = [Message(message=message['text'], channel_id=channel_ids_with_agent[i], user_id=message['user'], timestamp=message['ts'].split('.')[0]) for message in msgs_after]
-                    
+                    msgs_after = [Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'].split('.')[0], agent_name=self.registry.get_agent_name_from_id(message['user'])) for message in msgs_after]
                     if len(msgs_after) == 0:
                         continue
     
                     print(f"[DEBUG] All messages after conversion: {len(msgs_after)}")
 
                     # filter out messages that the agent has already seen
-                    new_messages = self.only_show_new_messages(parameters["your_name"], channel_ids_with_agent[i], msgs_after)
+                    new_messages = self.only_show_new_messages(parameters["your_name"], channel_id, msgs_after)
                     print(f"[DEBUG] New messages after filtering: {len(new_messages)}")
                     all_new_messages.append(new_messages)
-                    self._update_agent_read_messages(parameters["your_name"], channel_ids_with_agent[i], new_messages)
+                    self._update_agent_read_messages(parameters["your_name"], channel_id, new_messages)
                 return all_new_messages
 
 
