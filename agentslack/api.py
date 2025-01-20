@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
 from uuid import UUID, uuid4
-from agentslack.Slack import Slack
+from agentslack.slack import Slack
 from agentslack.registry import Registry
 import threading
 import uvicorn
