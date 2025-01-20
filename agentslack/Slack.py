@@ -38,7 +38,7 @@ class Slack:
             return response.data
         except SlackApiError as e:
             print(f"Error: {e}")
-            return []
+            return {'messages': []}
 
     def check_ongoing_dms(self, conversation_types: str = "im,mpim"):
         """
@@ -50,7 +50,7 @@ class Slack:
 
         except SlackApiError as e:
             print(f"Error: {e}")
-            return []
+            return {'channels': []}
         
     def get_channel_members(self, channel_id: str):
         try:
@@ -58,7 +58,7 @@ class Slack:
             return response.data
         except SlackApiError as e:
             print(f"Error: {e}")
-            return []
+            return {'members': []}
 
     def send_messsage(self, message: str, target_channel_id: str):
         try:
@@ -69,7 +69,7 @@ class Slack:
             return response 
         except SlackApiError as e:
             print(f"Error: {e}")
-            return []
+            return {'messages': []}
 
     def create_app(self, app_name: str, app_description: str, manifest_path: str = "configs/app_manifest.json"):
         # sadly this is most likely an admin feature
@@ -110,7 +110,7 @@ class Slack:
             return response.data
         except SlackApiError as e:
             print(f"Error: {e}")
-            return []
+            return {'channels': []}
     
     def add_user_to_channel(self, channel_id: str, user_id: str):
         # channels.invite()

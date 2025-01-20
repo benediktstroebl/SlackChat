@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
 from uuid import UUID, uuid4
-from agentslack.slack import Slack
+from agentslack.Slack import Slack
 from agentslack.registry import Registry
 import threading
 import uvicorn
@@ -67,6 +67,14 @@ class Server:
                 parameters={
                     "agent_name": "string"
                 }
+            ),
+            "create_channel": Tool(
+                name="create_channel",
+                description="Create a new channel",
+                parameters={
+                    "your_name": "string",
+                    "channel_name": "string",
+                }
             )
         }
         self.server_thread = None
@@ -88,6 +96,7 @@ class Server:
                 raise HTTPException(status_code=404, detail="Tool not found")
                 
             if tool_name == "send_dm":
+                print("PARAMETERS", parameters)
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 id_of_recipient = self.registry.get_agent(parameters["recipient_name"]).slack_app.slack_id
                 
@@ -166,11 +175,11 @@ class Server:
                 return {"status": "success", "response": str(response)}
             
             elif tool_name == "create_channel":
-                response = self.slack.create_channel(
+                slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
+                response = slack_client.create_channel(
                     channel_name=parameters["channel_name"],
-                    is_private=parameters["is_private"]
                 )
-                return {"status": "success", "response": str(response)}
+                return response
             
             elif tool_name == "add_user_to_channel":
                 response = self.slack.add_user_to_channel(
