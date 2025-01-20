@@ -95,8 +95,7 @@ print(f"Channels: {channels}")
 
 channel_name = channels[0]['name']
 print(f"Channel name: {channel_name}")
-messages = agentslack.call_tool("read_dm",
-    sender_name="a1",
+messages = agentslack.call_tool("check_new_messages",
     your_name="a2"
 )
 print(f"Messages: {messages}")
