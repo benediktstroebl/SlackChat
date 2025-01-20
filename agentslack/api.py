@@ -49,8 +49,40 @@ class Server:
                 
                 return {"status": "success", "response": str(response)} # TODO for some reason parsing response as json throws an error, so I am returning str for now
             
+            elif tool_name == "read":
+                response = self.slack.read(
+                    channel_id=parameters["channel_id"],
+                    limit=parameters["limit"]
+                )
+                return {"status": "success", "response": str(response)}
+            
+            elif tool_name == "check_ongoing_dms":
+                response = self.slack.check_ongoing_dms()
+                return {"status": "success", "response": str(response)}
+            
+            elif tool_name == "create_channel":
+                response = self.slack.create_channel(
+                    channel_name=parameters["channel_name"],
+                    is_private=parameters["is_private"]
+                )
+                return {"status": "success", "response": str(response)}
+            
+            elif tool_name == "add_user_to_channel":
+                response = self.slack.add_user_to_channel(
+                    channel_id=parameters["channel_id"],
+                    user_id=parameters["user_id"]
+                )
+                return {"status": "success", "response": str(response)}
+            
+            elif tool_name == "open_conversation":
+                response = self.slack.open_conversation(
+                    user_ids=parameters["user_ids"]
+                )
+                return {"status": "success", "response": str(response)}
+
             raise HTTPException(status_code=400, detail="Tool execution failed")
     
+
     def start(self, host: str = "0.0.0.0", port: int = 8080):
         """Start the server in a background thread"""
         if self.server_thread is not None:
@@ -60,9 +92,16 @@ class Server:
             uvicorn.run(self.app, host=host, port=port)
             
         self.server_thread = threading.Thread(target=run_server)
-        self.server_thread.daemon = True
+        self.server_thread.daemon = False  # Change to non-daemon
         self.server_thread.start()
         time.sleep(1)  # Give the server a moment to start
+
+        # Keep the main thread alive
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            self.stop()
 
     def stop(self):
         """Stop the server"""
