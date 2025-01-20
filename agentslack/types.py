@@ -8,6 +8,7 @@ class Message:
     message: str
     channel_id: str
     user_id: str
+    agent_name: str 
     timestamp: str
 
     def __eq__(self, other):
