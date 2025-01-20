@@ -8,7 +8,6 @@ import threading
 import uvicorn
 import time
 from agentslack.types import Message, Channel
-from dataclasses import asdict
 
 
 class Tool(BaseModel):
