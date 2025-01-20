@@ -200,6 +200,8 @@ class Server:
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 sender_name = parameters["sender_name"]
 
+                world_start_datetime = self.registry.get_world(sender_name).start_datetime
+
                 # get the ids, needed for communication with slack 
                 sender_agent = self.registry.get_agent(sender_name)
                 sender_id = sender_agent.slack_app.slack_id
@@ -217,7 +219,8 @@ class Server:
                 response = slack_client.read(channel_id=channel_id)
                 messages = []
                 for message in response['messages']:
-                    messages.append(Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'], agent_name=self.registry.get_agent_name_from_id(message['user'])))
+                    if message['ts'] >= world_start_datetime:
+                        messages.append(Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'], agent_name=self.registry.get_agent_name_from_id(message['user'])))
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
 
                 messages = response['messages']
