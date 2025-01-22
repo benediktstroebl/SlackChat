@@ -43,15 +43,13 @@ pip install agentslack
 ### Integrating a Slack Workspace and Apps
 
 1. Create a Slack Workspace.
-
-Instructions can be found here: [https://slack.com/help/articles/206845317-Create-a-Slack-workspace](https://slack.com/help/articles/206845317-Create-a-Slack-workspace)
+    - Instructions can be found here: [https://slack.com/help/articles/206845317-Create-a-Slack-workspace](https://slack.com/help/articles/206845317-Create-a-Slack-workspace)
 
 2. Create a Slack App with the permissions from `configs/app_manifest.json`.
     - Note, each agent you want to have in your world needs to have a slack app.
+    - Here is a good blog post on how to create a slack app: [https://techwondoe.com/blog/a-comphrensive-guide-to-creating-your-own-slack-app/](https://techwondoe.com/blog/a-comphrensive-guide-to-creating-your-own-slack-app/)
 
-Here is a good blog post on how to create a slack app: [https://techwondoe.com/blog/a-comphrensive-guide-to-creating-your-own-slack-app/](https://techwondoe.com/blog/a-comphrensive-guide-to-creating-your-own-slack-app/)
-
-3. Fill out the `slack_config.json` file with the app credentials. A sample config structure is provided. 
+3. Make a file called `slack_config.json` file with the app credentials. A sample config structure is provided in slack_config_sample.json. 
 
 ```json
 {
