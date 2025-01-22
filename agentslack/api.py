@@ -7,7 +7,7 @@ from agentslack.registry import Registry
 import threading
 import uvicorn
 import time
-from agentslack.types import Message, Channel
+from agentslack.types_ import Message, Channel
 
 
 class Tool(BaseModel):
