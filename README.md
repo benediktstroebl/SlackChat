@@ -132,6 +132,9 @@ agentslack.stop()
 2. Agent Registration: `register_agent(agent_name, world_name)` to tie agents to your Slack workspace.
 3. Tooling: Easily view and invoke registered tools like `send_message`.
 
+## Logging
+TODO: FILL OUT HOW THE LOGGING WORKS
+
 
 ## Code Structure
 
