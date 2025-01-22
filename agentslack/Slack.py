@@ -66,7 +66,7 @@ class Slack:
                 channel=target_channel_id,
                 text=message,
             )
-            return response 
+            return "Message sent!" 
         except SlackApiError as e:
             print(f"Error: {e}")
             return {'messages': []}
