@@ -1,9 +1,10 @@
 import os 
 import json 
 from typing import Dict, Set, Optional, List 
+from dataclasses import asdict
 from datetime import datetime
 from agentslack.Slack import Slack
-from agentslack.types import Agent, Channel, World, Message, SlackApp
+from agentslack.types import Agent, Channel, World, Message, SlackApp, Human
 
 class RegistryError(Exception):
     """Base exception for registry errors"""
@@ -40,6 +41,9 @@ class Registry:
         self._dms_to_world: Dict[str, str] = {} # dm_id -> world_name
 
         self._always_add_users: List[str] = self.slack_config['always_add_users']
+
+        self._humans: List[Human] = [Human(slack_member_id=human['slack_member_id'], name=human['name'], expertise=human['expertise']) for human in self.slack_config['humans']]
+
 
         self._slack_apps: List[SlackApp] = [SlackApp(slack_token=app['slack_token'], slack_id=app['slack_member_id']) for app in  self.slack_config['slack_app_info']['slack_apps']]
         self._agent_app_mapping: Dict[str, str] = {} # agent_name -> slack_app_id
@@ -97,6 +101,12 @@ class Registry:
     def get_agent_name_from_id(self, slack_app_id: str) -> str:
         return self._app_agent_mapping[slack_app_id]
     
+    def get_humans(self) -> List[dict]:
+        return [asdict(human) for human in self._humans]
+    
+    def get_human(self, human_name: str) -> Human:
+        return next((human for human in self._humans if human.name == human_name), None)
+
     def get_world_starttime_of_agent(self, agent_name: str) -> str:
         return self._world_name_mapping[self._agent_name_mapping[agent_name].world_name].start_datetime
 
@@ -134,9 +144,6 @@ class Registry:
     def get_channel(self, channel_name: str) -> Channel:
         print("CHANNELS", self._channel_name_mapping)
         return self._channel_name_mapping[channel_name]
-    
-    def get_humans(self) -> list[str]:
-        return self._always_add_users
 
     def is_human_in_world(self, world_name: str, human_id: str) -> bool:
         return human_id in self._worlds.get(world_name, World()).humans

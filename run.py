@@ -4,6 +4,7 @@ import os
 
 # Create client (which also starts the server)
 agentslack = AgentSlack(port=8080)
+agentslack.start()
 
 # we require each agent to have a name attribute 
 worldname = 'w1'
@@ -17,6 +18,19 @@ for agent in agents:
 # List available tools
 tools = agentslack.list_tools()
 print(f"Available tools: {tools}")
+
+humans = agentslack.call_tool("get_human_info",
+    your_name="a1"
+)
+
+send_message_to_human = agentslack.call_tool("send_human_message",
+    your_name="a1",
+    human_name="Benedikt",
+    message="Hey big B, heard you're a big fan of Slack. What's your favorite Slack feature?"
+)
+
+print(f"Humans: {humans}")
+exit()
 
 # # Example: Send a message using call_tool
 # response = agentslack.call_tool("send_dm",
@@ -86,6 +100,8 @@ channels = agentslack.call_tool("send_dm",
     recipient_name="a2",
     message="Slack GOD"
 )
+
+
 
 channels = agentslack.call_tool("send_broadcast",
     your_name="a1",

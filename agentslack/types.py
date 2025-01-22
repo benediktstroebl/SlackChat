@@ -3,6 +3,12 @@ from typing import Set, Dict
 from collections import defaultdict
 from agentslack.Slack import Slack
 
+@dataclass
+class Human:
+    slack_member_id: str
+    name: str
+    expertise: str
+
 @dataclass 
 class Message:
     message: str
