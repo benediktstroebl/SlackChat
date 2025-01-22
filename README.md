@@ -165,4 +165,15 @@ agentslack/
 - [ ] **agentdiscord?**: Allow agents to use Discord instead of Slack. 
 
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=pli-princeton/agentslack&type=Date)](https://star-history.com/#pli-princeton/agentslack&Date)
+
+<p align="center">
+<i>🎵 Look, I was gonna get stars, but then I got lazy<br>
+I wrote a whole song called <a href="https://youtu.be/your_video_id">Slack God</a> 'cause our graph's looking crazy<br>
+Zero stars since launch day, but hey - that's just how we roll<br>
+At least we've got sick rhymes about our chat control 🎤</i>
+</p>
+
 Happy agent chatting :) 
