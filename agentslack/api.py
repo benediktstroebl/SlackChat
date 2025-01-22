@@ -105,8 +105,8 @@ class Server:
                     "your_name": "string"
                 }
             ),
-            "send_human_message": Tool(
-                name="send_human_message",
+            "send_message_to_human": Tool(
+                name="send_message_to_human",
                 description="Send a message to a human",
                 parameters={
                     "your_name": "string",
@@ -224,6 +224,7 @@ class Server:
                     return f"The recipient '{parameters['recipient_name']}' does not exist, here are possible agents: {self.registry.get_all_agent_names()}"
                 if parameters["your_name"] not in self.registry.get_all_agent_names():
                     return f"The sender '{parameters['your_name']}' does not exist, here are possible agents: {self.registry.get_all_agent_names()}"
+                
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 id_of_recipient = self.registry.get_agent(parameters["recipient_name"]).slack_app.slack_id
                 
@@ -272,8 +273,8 @@ class Server:
                 return response['channels']
             
             elif tool_name == "read_channel":
-                if parameters["your_name"] not in self.registry.get_agent_names():
-                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
+                if parameters["your_name"] not in self.registry.get_all_agent_names():
+                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_all_agent_names()}"
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 channel_id = self.registry.get_channel(parameters["channel_name"]).slack_id
 
@@ -357,7 +358,7 @@ class Server:
                     messages = agent.slack_client.read(channel_id)['messages']
 
                     # filter to make sure the messages are after the world start datetime
-                    msgs_after = [msg for msg in messages if msg['ts'].split('.')[0] >= str(world_start_datetime)]
+                    msgs_after = [msg for msg in messages if datetime.fromtimestamp(float(msg['ts'])).timestamp() >= world_start_datetime]
 
                     msgs_after = [Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'].split('.')[0], agent_name=self.registry.get_agent_name_from_id(message['user'])) for message in msgs_after]
                     if len(msgs_after) == 0:
@@ -374,7 +375,7 @@ class Server:
                 humans = self.registry.get_humans()
                 return humans
             
-            elif tool_name == "send_human_message":
+            elif tool_name == "send_message_to_human":
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
 
                 human_id = self.registry.get_human(parameters["human_name"]).slack_member_id
@@ -398,7 +399,8 @@ class Server:
                 response = slack_client.create_channel(
                     channel_name=parameters["channel_name"],
                 )
-                self.registry.register_channel(parameters["your_name"], parameters["channel_name"], response.data['channel']['id'])
+                print(f"[DEBUG] Response: {response['channel']['id']}")
+                self.registry.register_channel(parameters["your_name"], response['channel']['id'], parameters["channel_name"])
                 return response
             
             elif tool_name == "open_conversation":
