@@ -1,4 +1,4 @@
-<h1 align="center">AgentSlack</h1>
+<h1 align="center">agentslack</h1>
 
 <p align="center">
     <a href="https://sage.cs.princeton.edu/">
