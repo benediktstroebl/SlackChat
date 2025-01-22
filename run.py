@@ -19,9 +19,7 @@ for agent in agents:
 tools = agentslack.list_tools()
 print(f"Available tools: {tools}")
 
-humans = agentslack.call_tool("get_human_info",
-    your_name="a1"
-)
+humans = agentslack.call_tool("get_human_info")
 
 send_message_to_human = agentslack.call_tool("send_human_message",
     your_name="a1",

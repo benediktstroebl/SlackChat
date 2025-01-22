@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import Dict, List, Optional, Any
+from pydantic import BaseModel, Field
+from typing import Dict, List, Any
 from uuid import UUID, uuid4
 from agentslack.Slack import Slack
 from agentslack.registry import Registry
@@ -13,7 +13,7 @@ from agentslack.types import Message, Channel
 class Tool(BaseModel):
     name: str
     description: str
-    parameters: Dict[str, Any]
+    parameters: Dict[str, Any] = Field(default_factory=dict)
 
 class WorldRegistration(BaseModel):
     world_name: str
@@ -158,6 +158,10 @@ class Server:
                 raise HTTPException(status_code=404, detail="Tool not found")
                 
             if tool_name == "send_dm":
+                if parameters["recipient_name"] not in self.registry.get_agent_names():
+                    return f"The recipient '{parameters['recipient_name']}' does not exist, here are possible agents: {self.registry.get_agent_names()}"
+                if parameters["your_name"] not in self.registry.get_agent_names():
+                    return f"The sender '{parameters['your_name']}' does not exist, here are possible agents: {self.registry.get_agent_names()}"
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 id_of_recipient = self.registry.get_agent(parameters["recipient_name"]).slack_app.slack_id
                 
@@ -177,6 +181,8 @@ class Server:
             
             elif tool_name == "send_broadcast":
                 # send message to a channel 
+                if parameters["your_name"] not in self.registry.get_agent_names():
+                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 channel_name = parameters["channel_name"]
                 channels = self.registry.get_agent(parameters["your_name"]).channels
@@ -195,11 +201,15 @@ class Server:
                 return response
 
             elif tool_name == "list_channels":
+                if parameters["your_name"] not in self.registry.get_agent_names():
+                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client    
                 response = slack_client.list_channels()
                 return response['channels']
             
             elif tool_name == "read_channel":
+                if parameters["your_name"] not in self.registry.get_agent_names():
+                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 channel_id = self.registry.get_channel(parameters["channel_name"]).slack_id
 
@@ -216,6 +226,10 @@ class Server:
                 return messages
             
             elif tool_name == "read_dm":
+                if parameters["your_name"] not in self.registry.get_agent_names():
+                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
+                if parameters["sender_name"] not in self.registry.get_agent_names():
+                    return f"The sender '{parameters['sender_name']}' does not exist, here are possible agents: {self.registry.get_agent_names()}"
                 # DMs for now are only between two agents (plus humans)
                 total_users = len(self.registry.get_humans()) + 2
                 your_agent = self.registry.get_agent(parameters["your_name"])
@@ -240,6 +254,8 @@ class Server:
                             channel_id = channel['id']
                             break
                 response = slack_client.read(channel_id=channel_id)
+                if response.get('error'):
+                    return response.get('error')
                 messages = []
                 for message in response['messages']:
                     if message['ts'].split('.')[0] >= world_start_datetime:
@@ -248,13 +264,17 @@ class Server:
                 return messages
             
             elif tool_name == "check_ongoing_dms":
-                response = self.slack.check_ongoing_dms()
+                if parameters["your_name"] not in self.registry.get_agent_names():
+                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
+                response = self.registry.get_agent(parameters["your_name"]).slack_client.check_ongoing_dms()
                 return response
             
             elif tool_name == "check_new_messages":
                 # return all channels and dms the user is a part of 
                 # ensure the timestamp of the messages is greater than 
                 # the start of the world 
+                if parameters["your_name"] not in self.registry.get_agent_names():
+                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
                 agent = self.registry.get_agent(parameters["your_name"])
                 agent_id = agent.slack_app.slack_id
                 world_start_datetime = self.registry.get_world(agent.world_name).start_datetime

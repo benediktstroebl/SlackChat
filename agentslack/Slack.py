@@ -31,6 +31,13 @@ class Slack:
     def read(self, channel_id: str, limit: int = 100):
         # return all messages the MCP server should handle which messages are new
         try:
+            # First check if channel exists by trying to get info
+            try:
+                self.client.conversations_info(channel=channel_id)
+            except SlackApiError as e:
+                if "channel_not_found" in str(e):
+                    return {"error": "This channel doesn't exist"}
+
             response = self.client.conversations_history(
                 channel=channel_id,
                 limit=limit
@@ -54,6 +61,12 @@ class Slack:
         
     def get_channel_members(self, channel_id: str):
         try:
+            # First check if channel exists by trying to get info
+            try:
+                self.client.conversations_info(channel=channel_id)
+            except SlackApiError as e:
+                if "channel_not_found" in str(e):
+                    return {"error": "This channel doesn't exist"}
             response = self.client.conversations_members(channel=channel_id)
             return response.data
         except SlackApiError as e:
@@ -74,6 +87,7 @@ class Slack:
     def create_app(self, app_name: str, app_description: str, manifest_path: str = "configs/app_manifest.json"):
         # sadly this is most likely an admin feature
         # you need slack premium for this. 
+        raise NotImplementedError("This is an admin feature. You need slack premium for this.")
         manifest = self._prepare_manifest(manifest_path, app_name, app_description)
         response = self.client.apps_manifest_create(
             manifest=manifest
@@ -115,6 +129,12 @@ class Slack:
     def add_user_to_channel(self, channel_id: str, user_id: str):
         # channels.invite()
         try:
+            # First check if channel exists by trying to get info
+            try:
+                self.client.conversations_info(channel=channel_id)
+            except SlackApiError as e:
+                if "channel_not_found" in str(e):
+                    return {"error": "This channel doesn't exist"}
             response = self.client.conversations_invite(channel=channel_id, users=user_id)
             return response.data
         except SlackApiError as e:

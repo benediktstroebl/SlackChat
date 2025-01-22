@@ -111,7 +111,10 @@ class Registry:
         return self._world_name_mapping[self._agent_name_mapping[agent_name].world_name].start_datetime
 
     def get_agent(self, agent_name: str) -> Agent:
-        return self._agent_name_mapping[agent_name]
+        try: 
+            return self._agent_name_mapping[agent_name]
+        except KeyError:
+            return f"Agent '{agent_name}' does not exist, here are possible agents: {self._agent_name_mapping.keys()}"
     
     def get_world(self, world_name: str) -> World:
         return self._world_name_mapping[world_name]
