@@ -3,11 +3,14 @@ from typing import Set, Dict
 from collections import defaultdict
 from agentslack.Slack import Slack
 from datetime import datetime
+
+
 @dataclass
 class Human:
     slack_member_id: str
     name: str
     expertise: str
+    additional_info: Dict[str, str] = field(default_factory=dict)  # For any extra attributes
 
 @dataclass 
 class Message:
