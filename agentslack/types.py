@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Set, Dict
 from collections import defaultdict
 from agentslack.Slack import Slack
-
+from datetime import datetime
 @dataclass
 class Human:
     slack_member_id: str
@@ -50,7 +50,7 @@ class Agent:
 class World:
     agents: Set[str] = field(default_factory=set)
     humans: Set[str] = field(default_factory=set)
-    start_datetime: str = field(default_factory=str)
+    start_datetime: datetime = field(default_factory=datetime.now)
     slack_client: Slack = None 
     channels: list[Channel] = field(default_factory=list)
     human_mappings: Dict[str, str] = field(default_factory=dict) # human_id -> slack_app_id
