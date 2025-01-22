@@ -412,7 +412,7 @@ class Server:
                 channel = self.registry.get_channel(parameters["channel_name"])
                 response = agent.slack_client.add_user_to_channel(
                     channel_id=channel.slack_id,
-                    user_id=other_agent.slack_app.slack_id
+                    user_id=[other_agent.slack_app.slack_id]
                 )
                 return response
 
