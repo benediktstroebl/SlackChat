@@ -21,6 +21,25 @@ print(f"Available tools: {tools}")
 
 humans = agentslack.call_tool("get_human_info")
 
+# send dm to a2
+send_dm = agentslack.call_tool("send_dm",
+    your_name="a1",
+    recipient_name="a2",
+    message="Slack GOD"
+)
+
+send_dm = agentslack.call_tool("send_dm",
+    your_name="a1",
+    recipient_name="a2",
+    message="Slack GOD"
+)
+
+send_dm = agentslack.call_tool("send_dm",
+    your_name="a3",
+    recipient_name="a2",
+    message="Slack GOD"
+)
+
 send_message_to_human = agentslack.call_tool("send_human_message",
     your_name="a1",
     human_name="Benedikt",
