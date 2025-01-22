@@ -136,9 +136,6 @@ agentslack.stop()
 
 Logs are saved in the `log_dir` directory specified in the `config.json` file. Each world has its own directory. Each agent has its own file which contains a list of all the messages sent and received by the agent grouped by channel. The logs are contain metadata about the channels the agents is a part of.
 
-## smolagents tools
-TODO: FILL OUT HOW THE TOOLS WORK
-
 ## Code Structure
 
 The package is organized as follows:
