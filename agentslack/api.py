@@ -205,9 +205,6 @@ class Server:
         agent.read_messages[channel_id].extend([message for message in messages if message not in agent.read_messages[channel_id]])
         
         self._export_agent_logs(agent)
-        
-        
-
 
     def _setup_routes(self):
         @self.app.get("/tools")
@@ -221,7 +218,10 @@ class Server:
                 
             if tool_name == "send_dm":
                 if parameters["recipient_name"] not in self.registry.get_all_agent_names():
-                    return f"The recipient '{parameters['recipient_name']}' does not exist, here are possible agents: {self.registry.get_all_agent_names()}"
+                    if parameters['recipient_name'] in self.registry.get_all_human_names():
+                        return f"You are trying to send a message to a human. For that use the send_message_to_human tool."
+                    else:
+                        return f"The recipient '{parameters['recipient_name']}' does not exist, here are possible agents: {self.registry.get_all_agent_names()}"
                 if parameters["your_name"] not in self.registry.get_all_agent_names():
                     return f"The sender '{parameters['your_name']}' does not exist, here are possible agents: {self.registry.get_all_agent_names()}"
                 
@@ -293,11 +293,14 @@ class Server:
             elif tool_name == "read_dm":
                 if parameters["your_name"] not in self.registry.get_agent_names():
                     return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
-                if parameters["sender_name"] not in self.registry.get_agent_names():
+                if parameters["sender_name"] not in self.registry.get_agent_names() and parameters["sender_name"] not in self.registry.get_all_human_names():
                     return f"The sender '{parameters['sender_name']}' does not exist, here are possible agents: {self.registry.get_agent_names()}"
-                # DMs for now are only between two agents (plus humans)
+                
+                # NOTE: DMs for now are only between two agents (plus humans), i.e., we don't allow for mpim
+                
                 total_users = len(self.registry.get_humans()) + 2
                 your_agent = self.registry.get_agent(parameters["your_name"])
+                
                 # get the main agent 
                 slack_client = your_agent.slack_client
                 sender_name = parameters["sender_name"]
@@ -307,10 +310,11 @@ class Server:
                 # get the ids, needed for communication with slack 
                 sender_agent = self.registry.get_agent(sender_name)
                 sender_id = sender_agent.slack_app.slack_id
-
                 receiver_id = your_agent.slack_app.slack_id
                 # loop over channels from the agent 
                 channels = slack_client.check_ongoing_dms()
+                
+                # TODO: get a better way of keeping track of dm channels, to not overload the api as is currently done. 
                 for channel in channels['channels']:
                     members = slack_client.get_channel_members(channel['id'])['members']
                     if len(members) == total_users:
@@ -318,60 +322,85 @@ class Server:
                         if (sender_id in members) and (receiver_id in members):
                             channel_id = channel['id']
                             break
+
                 response = slack_client.read(channel_id=channel_id)
                 if response.get('error'):
                     return response.get('error')
                 messages = []
                 for message in response['messages']:
                     if datetime.fromtimestamp(float(message['ts'])).timestamp() >= world_start_datetime:
-                        messages.append(Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'].split('.')[0], agent_name=self.registry.get_agent_name_from_id(message['user'])))
+                        messages.append(Message(
+                            message=message['text'], 
+                            channel_id=channel_id, 
+                            user_id=message['user'], 
+                            timestamp=message['ts'].split('.')[0], 
+                            agent_name=self.registry.get_agent_name_from_id(message['user']))
+                            )
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
                 return messages
             
             elif tool_name == "check_ongoing_dms":
                 if parameters["your_name"] not in self.registry.get_agent_names():
+                    # TODO: think about whether we should return all agents in the world 
                     return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
                 response = self.registry.get_agent(parameters["your_name"]).slack_client.check_ongoing_dms()
                 return response
             
             elif tool_name == "check_new_messages":
-                # return all channels and dms the user is a part of 
-                # ensure the timestamp of the messages is greater than 
-                # the start of the world 
+                # This should be the main endpoint for the agent to check for new messages
+                # return all new messages channels and dms the user is a part of 
+                # ensure the timestamp of the messages is greater than the start of the world 
                 if parameters["your_name"] not in self.registry.get_agent_names():
                     return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
+                
+                # get agent information 
                 agent = self.registry.get_agent(parameters["your_name"])
                 agent_id = agent.slack_app.slack_id
+
+                # get world information     
                 world_start_datetime = self.registry.get_world(agent.world_name).start_datetime
+
+                # update the channels the agent is a part of NOTE this might be redundant 
                 self.update_channels(parameters["your_name"])
                 channels = agent.channels
                 channel_ids = [channel.slack_id for channel in channels]
 
                 channel_ids_with_agent = []
+                # get_channel_members and check for agent in members 
                 for channel_id in channel_ids:
                     members = agent.slack_client.get_channel_members(channel_id)['members']
                     if agent_id in members:
                         channel_ids_with_agent.append(channel_id)
 
+                # get all new messages in the channels the agent is a part of 
                 all_new_messages = []
-                for i, channel_id in enumerate(channel_ids_with_agent):
+                for channel_id in channel_ids_with_agent:
                     messages = agent.slack_client.read(channel_id)['messages']
 
                     # filter to make sure the messages are after the world start datetime
                     msgs_after = [msg for msg in messages if datetime.fromtimestamp(float(msg['ts'])).timestamp() >= world_start_datetime]
 
-                    msgs_after = [Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'].split('.')[0], agent_name=self.registry.get_agent_name_from_id(message['user'])) for message in msgs_after]
+                    # convert to Message objects 
+                    msgs_after = [Message(
+                        message=message['text'], 
+                        channel_id=channel_id, 
+                        user_id=message['user'], 
+                        timestamp=message['ts'].split('.')[0], 
+                        agent_name=self.registry.get_agent_name_from_id(message['user'])) 
+                        for message in msgs_after]
+                    
                     if len(msgs_after) == 0:
                         continue
     
-
                     # filter out messages that the agent has already seen
                     new_messages = self.only_show_new_messages(parameters["your_name"], channel_id, msgs_after)
                     all_new_messages.append(new_messages)
+                    # update the agent's channel with these new messages
                     self._update_agent_read_messages(parameters["your_name"], channel_id, new_messages)
                 return all_new_messages
             
             elif tool_name == "get_human_info":
+                # get's the metadata about the human in the world 
                 humans = self.registry.get_humans()
                 return humans
             
