@@ -3,6 +3,7 @@ import json
 from typing import Dict, Set, Optional, List 
 from dataclasses import asdict
 from datetime import datetime
+from copy import deepcopy
 from agentslack.Slack import Slack
 from agentslack.types import Agent, Channel, World, Message, SlackApp, Human
 
@@ -23,6 +24,9 @@ class Registry:
     def __init__(self):
         with open('slack_config.json', 'r') as file:
             self.slack_config = json.load(file)
+            
+        with open('config.json', 'r') as file:
+            self.config = json.load(file)
 
         os.environ['SLACK_CLIENT_ID'] = self.slack_config['slack_client_id']
         os.environ['SLACK_CLIENT_SECRET'] = self.slack_config['slack_client_secret']
@@ -56,7 +60,7 @@ class Registry:
         """Register a new world. Raises DuplicateWorldError if name already exists."""
         if world_name in self._world_name_mapping:
             raise DuplicateWorldError(f"World '{world_name}' already exists")
-        self._world_name_mapping[world_name] = World(start_datetime=str(int(datetime.now().timestamp())))
+        self._world_name_mapping[world_name] = World(start_datetime=datetime.now().timestamp())
 
         self._world_name_mapping[world_name].slack_client = self.world_client
         # create a world channel, akin to a public space 
@@ -147,8 +151,15 @@ class Registry:
         return self._worlds.get(world_name, World()).humans
     
     def get_channel(self, channel_name: str) -> Channel:
-        print("CHANNELS", self._channel_name_mapping)
         return self._channel_name_mapping[channel_name]
+    
+    def get_channel_from_id(self, channel_id: str) -> Channel:
+        for agent in self._agent_name_mapping.keys():
+            for channel in self._agent_name_mapping[agent].channels:
+                if channel.slack_id == channel_id:
+                    return channel
+        return None
+        
 
     def is_human_in_world(self, world_name: str, human_id: str) -> bool:
         return human_id in self._worlds.get(world_name, World()).humans
@@ -187,12 +198,18 @@ class Registry:
         if agent_name in self._agents:
             return self._agents[agent_name].world_name
         return None
+    
+    def get_always_add_users(self) -> List[str]:
+        return self._always_add_users
         
     def get_world_agents(self, world_name: str) -> Set[str]:
         return self._worlds.get(world_name, World()).agents
     
     def get_all_agents(self) -> list[Agent]:
         return list(self._agent_name_mapping.values())
+    
+    def get_all_agent_names(self) -> list[str]:
+        return list(self._agent_name_mapping.keys())
     
     def get_slack_app_id(self, agent_name: str, human_id: str) -> Optional[str]:
         """Get Slack user ID for a human if the agent can interact with them"""
@@ -204,3 +221,14 @@ class Registry:
                     return world.human_mappings.get(human_id)
         return None
         
+        
+    def get_masked_slack_config(self) -> dict:
+        config = deepcopy(self.slack_config)
+        
+        for app in config['slack_app_info']['agent_apps']:
+            app['slack_token'] = "********"
+        config['slack_app_info']['world_app']['slack_token'] = "********"
+        
+        config['slack_client_secret'] = "********"
+        config['slack_client_id'] = "********"
+        return config

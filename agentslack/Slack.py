@@ -1,9 +1,10 @@
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-
+from tqdm import tqdm
 from dotenv import load_dotenv
 import os
 import json
+import time
 
 load_dotenv()
 
@@ -180,36 +181,45 @@ class Slack:
         # this will again be a command line feature hopefully
         pass 
     
-    def export_history(self, channel_names: list[str], limit: int = 100):
+    def export_history(self, channel_names: list[str], limit: int = 999):
         """
         Exports the entire history of the workspace
         """
         try:
+            
             history = {}
             channels_workspace = self.client.conversations_list(limit=limit)['channels']
                         
             channels = [channel for channel in channels_workspace if channel['name'] in channel_names]
-            # print(f"[DEBUG] Channels: {channels}")
-            for channel in channels:
+            
+                
+            for channel in tqdm(channels, desc=f"Exporting history", unit="channel"):
                 channel_id = channel["id"]
                 channel_name = channel["name"]
                 history[channel_id] = {"name": channel_name, "messages": []}
-                while True:
-                    
-                    response = self.client.conversations_history(
+                
+                response = self.client.conversations_history(
                         channel=channel_id,
                         limit=limit
                     )
+                
+                while True and response["has_more"]:
+                    oldest = response["messages"][-1]["ts"]
                     
-                    
-                    
-                    for message in response["messages"]:
-                        history[channel_id]["messages"].append(message)
+                    response = self.client.conversations_history(
+                        channel=channel_id,
+                        limit=limit,
+                        latest=oldest
+                    )
 
+                    history[channel_id]["messages"].extend(response["messages"])
+                    
                     if not response["has_more"]:
                         break
+                    
+                    time.sleep(.2)
 
-                    cursor = response["response_metadata"]["next_cursor"]
+                
             return history
         except SlackApiError as e:
             print(f"Error: {e}")
