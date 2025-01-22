@@ -400,13 +400,6 @@ class Server:
                 )
                 return response
             
-            elif tool_name == "add_member_to_channel":
-                response = self.slack.add_user_to_channel(
-                    channel_id=parameters["channel_id"],
-                    user_id=parameters["user_id"]
-                )
-                return response
-            
             elif tool_name == "open_conversation":
                 response = self.slack.open_conversation(
                     user_ids=parameters["user_ids"]

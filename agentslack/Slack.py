@@ -71,7 +71,7 @@ class Slack:
             response = self.client.conversations_members(channel=channel_id)
             return response.data
         except SlackApiError as e:
-            print(f"Error: {e}")
+            # print(f"Error: {e}")
             return {'members': []}
 
     def send_messsage(self, message: str, target_channel_id: str):
