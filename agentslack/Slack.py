@@ -124,7 +124,7 @@ class Slack:
         except SlackApiError as e:
             return {'channels': []}
     
-    def add_user_to_channel(self, channel_id: str, user_id: str):
+    def add_user_to_channel(self, channel_id: str, user_id: list[str]):
         # channels.invite()
         try:
             # First check if channel exists by trying to get info
@@ -133,7 +133,7 @@ class Slack:
             except SlackApiError as e:
                 if "channel_not_found" in str(e):
                     pass 
-            response = self.client.conversations_invite(channel=channel_id, users=[user_id] + self.always_add_users)
+            response = self.client.conversations_invite(channel=channel_id, users=user_id + self.always_add_users)
             return response.data
         except SlackApiError as e:
             return []
