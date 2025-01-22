@@ -40,12 +40,15 @@ class Registry:
         self._world_to_dms: Dict[str, List[str]] = {} # world_name -> dms
         self._dms_to_world: Dict[str, str] = {} # dm_id -> world_name
 
-        self._always_add_users: List[str] = self.slack_config['always_add_users']
+        self._always_add_users: List[str] = self.slack_config['always_add_users'] + [self.slack_config['slack_app_info']['world_app']['slack_member_id']]
 
         self._humans: List[Human] = [Human(slack_member_id=human['slack_member_id'], name=human['name'], expertise=human['expertise']) for human in self.slack_config['humans']]
+        
+        self.world_client = Slack(slack_token=self.slack_config['slack_app_info']['world_app']['slack_token'], always_add_users=self._always_add_users)
+        self.world_token = self.slack_config['slack_app_info']['world_app']['slack_token']
 
 
-        self._slack_apps: List[SlackApp] = [SlackApp(slack_token=app['slack_token'], slack_id=app['slack_member_id']) for app in  self.slack_config['slack_app_info']['slack_apps']]
+        self._slack_apps: List[SlackApp] = [SlackApp(slack_token=app['slack_token'], slack_id=app['slack_member_id']) for app in  self.slack_config['slack_app_info']['agent_apps']]
         self._agent_app_mapping: Dict[str, str] = {} # agent_name -> slack_app_id
         self._app_agent_mapping: Dict[str, str] = {} # slack_app_id -> agent_name
         
@@ -54,9 +57,8 @@ class Registry:
         if world_name in self._world_name_mapping:
             raise DuplicateWorldError(f"World '{world_name}' already exists")
         self._world_name_mapping[world_name] = World(start_datetime=str(int(datetime.now().timestamp())))
-        self.world_token = self._slack_apps[0].slack_token
 
-        self.world_client = Slack(slack_token=self.world_token, always_add_users=self._always_add_users)
+        self._world_name_mapping[world_name].slack_client = self.world_client
         # create a world channel, akin to a public space 
         # add all the channels to the world 
         channels = self.world_client.list_channels()

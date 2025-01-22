@@ -22,6 +22,10 @@ class AgentRegistration(BaseModel):
     agent_name: str
     world_name: str
 
+class HistoryExport(BaseModel):
+    world_name: str
+    limit: int
+
 class Server:
     def __init__(self, host: str = "0.0.0.0", port: int = 8080):
         self.app = FastAPI()
@@ -344,7 +348,7 @@ class Server:
                     channel_id=parameters["channel_id"],
                     user_id=parameters["user_id"]
                 )
-                return {"status": "success", "response": str(response)}
+                return response
             
             elif tool_name == "open_conversation":
                 response = self.slack.open_conversation(
@@ -355,18 +359,40 @@ class Server:
             raise HTTPException(status_code=400, detail="Tool execution failed")
 
         @self.app.post("/register_world")
-        async def register_world(request: WorldRegistration):
+        async def register_world(request: WorldRegistration) -> str:
             try:
                 self.registry.register_world(request.world_name)
-                return {"status": "success", "message": f"World {request.world_name} registered successfully"}
+                return f"World {request.world_name} registered successfully"
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
 
         @self.app.post("/register_agent")
-        async def register_agent(request: AgentRegistration):
+        async def register_agent(request: AgentRegistration) -> str:
             try:
                 self.registry.register_agent(request.agent_name, request.world_name)
-                return {"status": "success", "message": f"Agent {request.agent_name} registered successfully in world {request.world_name}"}
+                return f"Agent {request.agent_name} registered successfully in world {request.world_name}"
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            
+            
+        @self.app.get("/export_history")
+        async def export_history(request: HistoryExport) -> dict:
+            try:
+                client = self.registry.get_world(request.world_name).slack_client
+                channels = self.registry.get_world(request.world_name).channels
+                channel_names = [channel.name for channel in channels]
+        
+                response = client.export_history(channel_names=channel_names, limit=request.limit)
+                
+                world_start_datetime = self.registry.get_world(request.world_name).start_datetime
+                print(f"[DEBUG] World start datetime: {world_start_datetime}")
+                for channel_id, channel_data in response.items():
+                    for message in channel_data['messages']:
+                        if message['ts'].split('.')[0] >= world_start_datetime:
+                            print(f"[DEBUG] Message: {message}")
+                
+                print(f"[DEBUG] Export history response: {response}")
+                return response
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
     

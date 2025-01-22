@@ -179,6 +179,41 @@ class Slack:
     def delete_channel_history(self, channel_id: str):
         # this will again be a command line feature hopefully
         pass 
+    
+    def export_history(self, channel_names: list[str], limit: int = 100):
+        """
+        Exports the entire history of the workspace
+        """
+        try:
+            history = {}
+            channels_workspace = self.client.conversations_list(limit=limit)['channels']
+                        
+            channels = [channel for channel in channels_workspace if channel['name'] in channel_names]
+            # print(f"[DEBUG] Channels: {channels}")
+            for channel in channels:
+                channel_id = channel["id"]
+                channel_name = channel["name"]
+                history[channel_id] = {"name": channel_name, "messages": []}
+                while True:
+                    
+                    response = self.client.conversations_history(
+                        channel=channel_id,
+                        limit=limit
+                    )
+                    
+                    
+                    
+                    for message in response["messages"]:
+                        history[channel_id]["messages"].append(message)
+
+                    if not response["has_more"]:
+                        break
+
+                    cursor = response["response_metadata"]["next_cursor"]
+            return history
+        except SlackApiError as e:
+            print(f"Error: {e}")
+            return {}
 
 if __name__ == "__main__":
 
