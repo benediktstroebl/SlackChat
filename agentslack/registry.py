@@ -112,7 +112,7 @@ class Registry:
     
     def get_human(self, human_name: str) -> Human:
         return next((human for human in self._humans if human.name == human_name), None)
-
+    
     def get_world_starttime_of_agent(self, agent_name: str) -> str:
         return self._world_name_mapping[self._agent_name_mapping[agent_name].world_name].start_datetime
 
@@ -159,7 +159,13 @@ class Registry:
                 if channel.slack_id == channel_id:
                     return channel
         return None
-        
+    
+    def register_channel(self, agent_name: str, channel_name: str, channel_id: str) -> None:
+        self._channel_name_mapping[channel_name] = Channel(slack_id=channel_id, name=channel_name)
+        # get agent 
+        agent = self._agent_name_mapping[agent_name]
+        agent_world = agent.world_name
+        self._world_name_mapping[agent_world].channels.append(Channel(slack_id=channel_id, name=channel_name))
 
     def is_human_in_world(self, world_name: str, human_id: str) -> bool:
         return human_id in self._worlds.get(world_name, World()).humans
