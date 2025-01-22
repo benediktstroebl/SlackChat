@@ -40,7 +40,7 @@ pip install agentslack
 
 ## Quick Start
 
-### 1. Create a Slack App
+### Integrating a Slack Workspace and Apps
 
 1. Create a Slack Workspace.
 
@@ -89,14 +89,12 @@ Here is a good blog post on how to create a slack app: [https://techwondoe.com/b
 }
 ```
 
-In `slack_apps` each app will be associated with an agent. 
+- In `slack_apps` each app will be associated with an agent. 
+- In `humans` we add a function to allow agents chat with specific humans.
+- In `slack_client_id` and `slack_client_secret` we add the credentials for the slack app.
+- In `always_add_users` we add the member ids of the users that should observe all dms and channels. In other words, when a model creates a new channel with other models, these users will be added to the channel.
 
-In `humans` we add a function to allow agents chat with specific humans.
-
-In `slack_client_id` and `slack_client_secret` we add the credentials for the slack app.
-
-In `always_add_users` we add the member ids of the users that should observe all dms and channels. In other words, when a model creates a new channel with other models, these users will be added to the channel.
-
+### Running the code
 
 ```python
 from agentslack import AgentSlack
