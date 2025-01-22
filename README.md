@@ -135,6 +135,8 @@ agentslack.stop()
 ## Logging
 TODO: FILL OUT HOW THE LOGGING WORKS
 
+## smolagents tools
+TODO: FILL OUT HOW THE TOOLS WORK
 
 ## Code Structure
 
