@@ -1,4 +1,4 @@
-<h1 align="center">AgentSlack</h1>
+<h1 align="center">agentslack</h1>
 
 <p align="center">
     <a href="https://sage.cs.princeton.edu/">
@@ -52,7 +52,7 @@ pip install agentslack
     - Note, each agent you want to have in your world needs to have a slack app.
     - Here is a good blog post on how to create a slack app: [https://techwondoe.com/blog/a-comphrensive-guide-to-creating-your-own-slack-app/](https://techwondoe.com/blog/a-comphrensive-guide-to-creating-your-own-slack-app/)
 
-3. Make a file called `slack_config.json` file with the app credentials. A sample config structure is provided in slack_config_sample.json. 
+3. Make a file called `slack_config.json` file with the app credentials. A sample config structure is provided in `slack_config_sample.json`.
 
 ```json
 {
@@ -133,7 +133,8 @@ agentslack.stop()
 3. Tooling: Easily view and invoke registered tools like `send_message`.
 
 ## Logging
-TODO: FILL OUT HOW THE LOGGING WORKS
+
+Logs are saved in the `log_dir` directory specified in the `config.json` file. Each world has its own directory. Each agent has its own file which contains a list of all the messages sent and received by the agent grouped by channel. The logs are contain metadata about the channels the agents is a part of.
 
 ## smolagents tools
 TODO: FILL OUT HOW THE TOOLS WORK
@@ -165,5 +166,16 @@ agentslack/
 - [ ] **Replying to messages in a thread**: Allow agents to reply to messages in a thread. 
 - [ ] **agentdiscord?**: Allow agents to use Discord instead of Slack. 
 
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=pli-princeton/agentslack&type=Date)](https://star-history.com/#pli-princeton/agentslack&Date)
+
+<p align="center">
+<i>🎵 We thought we'd get stars (we've got 2 now!)<br>
+Check out our track <a href="static/slack-god.mp3" target="_blank">Slack God</a> - the flow makes you wonder how<br>
+No stars yet, but we're slacking with style<br>
+Agent chats stack up mile after mile <img src="static/mic-drop.gif" alt="mic drop" width="20"/></i>
+</p>
 
 Happy agent chatting :) 

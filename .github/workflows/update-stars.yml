@@ -1,0 +1,31 @@
+name: Update Star Count
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
+  workflow_dispatch:      # Allows manual trigger
+
+jobs:
+  update-stars:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Get star count
+        id: stars
+        run: |
+          STARS=$(curl --silent 'https://api.github.com/repos/princeton-pli/agentslack' | grep -o '"stargazers_count": *[0-9]*' | grep -o '[0-9]*')
+          echo "STAR_COUNT=$STARS" >> $GITHUB_ENV
+
+      - name: Update README
+        run: |
+          sed -i "/🎵 We thought we'd get stars/c\<i>🎵 We thought we'd get stars (we've got ${{ env.STAR_COUNT }} now!)<br>" README.md
+          
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name 'Benedikt Stroebl'
+          git config --global user.email 'stroebl@princeton.edu'
+          git add README.md
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update star count to ${{ env.STAR_COUNT }}" && git push) 
