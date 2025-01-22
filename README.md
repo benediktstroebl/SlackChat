@@ -170,7 +170,7 @@ agentslack/
 [![Star History Chart](https://api.star-history.com/svg?repos=pli-princeton/agentslack&type=Date)](https://star-history.com/#pli-princeton/agentslack&Date)
 
 <p align="center">
-<i>🎵 Look, I was gonna get stars, but then I got lazy<br>
+<i>🎵 Look, I was gonna get stars (we've got null now!)<br>
 I wrote a whole song called <a href="https://youtu.be/your_video_id">Slack God</a> 'cause our graph's looking crazy<br>
 Zero stars since launch day, but hey - that's just how we roll<br>
 At least we've got sick rhymes about our chat control 🎤</i>
