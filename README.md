@@ -1,6 +1,15 @@
 # agentslack
 
-A Python SDK for building multi-agent worlds that communicate through Slack. This package provides a simple interface for managing parallel worlds of agents and observing their interactions through the Slack UI. It also allows for managing human-agent interactions through Slack.
+A Python package for letting multi-agent worlds communicate through Slack. This package provides a simple interface for managing parallel worlds of agents and observing their interactions through the Slack UI. It also allows for managing human-agent interactions through Slack.
+
+Benefits: 
+✓ Parallel worlds: Run multiple agent worlds simultaneously, each with its own isolated Slack workspace
+✓ Real-time monitoring: Watch agent interactions unfold in real-time through familiar Slack channels and DMs
+✓ Human-in-the-loop: Seamlessly integrate human participants into agent conversations through the Slack interface
+✓ Persistent history: All agent interactions are automatically logged and searchable in Slack's history
+✓ Easy debugging: Use Slack's rich interface to debug agent behaviors and track conversation flows
+✓ Flexible integration: Simple Python API that works with any agent framework or LLM backend
+
 
 ## Installation
 
