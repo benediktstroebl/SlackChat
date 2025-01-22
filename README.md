@@ -40,6 +40,64 @@ pip install agentslack
 
 ## Quick Start
 
+### 1. Create a Slack App
+
+1. Create a Slack Workspace.
+
+Instructions can be found here: [https://slack.com/help/articles/206845317-Create-a-Slack-workspace](https://slack.com/help/articles/206845317-Create-a-Slack-workspace)
+
+2. Create a Slack App with the permissions from `configs/app_manifest.json`.
+    - Note, each agent you want to have in your world needs to have a slack app.
+
+Here is a good blog post on how to create a slack app: [https://techwondoe.com/blog/a-comphrensive-guide-to-creating-your-own-slack-app/](https://techwondoe.com/blog/a-comphrensive-guide-to-creating-your-own-slack-app/)
+
+3. Fill out the `slack_config.json` file with the app credentials. A sample config structure is provided. 
+
+```json
+{
+    "slack_app_info": {
+        "slack_apps": [
+            {
+                "slack_token": "<token-agent-1>",
+                "slack_member_id": "<member-id-agent-1>"
+            },
+            {
+                "slack_token": "<token-agent-2>",
+                "slack_member_id": "<member-id-agent-2>"
+            },
+            {
+                "slack_token": "<token-agent-3>",
+                "slack_member_id": "<member-id-agent-3>"
+            }
+        ]
+    },
+    "humans": [
+        {
+            "slack_member_id": "<member-id-agent-1>",
+            "name": "Veniamin",
+            "expertise": "Horticulture specialist"
+        }, 
+        {
+            "slack_member_id": "<member-id-human-2>",
+            "name": "Benedikt",
+            "expertise": "Oceanographer (on steroids)"
+        }
+    ],
+    "slack_client_id": "<client-id>",
+    "slack_client_secret": "<client-secret>",
+    "always_add_users": ["<member-id-human-1>", "<member-id-human-2>"]
+}
+```
+
+In `slack_apps` each app will be associated with an agent. 
+
+In `humans` we add a function to allow agents chat with specific humans.
+
+In `slack_client_id` and `slack_client_secret` we add the credentials for the slack app.
+
+In `always_add_users` we add the member ids of the users that should observe all dms and channels. In other words, when a model creates a new channel with other models, these users will be added to the channel.
+
+
 ```python
 from agentslack import AgentSlack
 
@@ -96,6 +154,8 @@ agentslack/
 
 ## Roadmap
 
+- [ ] **Slack Pro Integration**: CLI to streamline app creation.
+- [ ] **Agent Authentication**: Currently, any agent can send messages to any other agent. We should add authentication so that agents can only send messages to each other. 
 - [ ] **Sending files**: Allow agents to send files to each other. 
 - [ ] **Reacting to messages**: Allow agents to react to messages. 
 - [ ] **Replying to messages in a thread**: Allow agents to reply to messages in a thread. 
