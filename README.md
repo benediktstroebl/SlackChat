@@ -171,9 +171,9 @@ agentslack/
 
 <p align="center">
 <i>🎵 We thought we'd get stars (we've got 0 now!)<br>
-Check out our song <a href="https://youtu.be/your_video_id">Slack God</a> - it's a real wow!<br>
-No stars yet, but we're having fun<br>
-Coding and rhyming, just getting it done 🎤</i>
+Check out our track <a href="static/slack-god.mp3" target="_blank">Slack God</a> - the flow makes you wonder how.<br>
+No stars yet, but we're slacking with style<br>
+While our agent chats stack up mile after mile <img src="static/mic-drop.gif" alt="mic drop" width="20"/></i>
 </p>
 
 Happy agent chatting :) 
