@@ -24,7 +24,10 @@
         {
             "slack_member_id": "<member-id-human-2>",
             "name": "Benedikt",
-            "expertise": "Oceanographer (on steroids)"
+            "expertise": "Oceanographer (on steroids)",
+            "additional_info": {
+                
+            }
         }
     ],
     "slack_client_id": "<client-id>",

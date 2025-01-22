@@ -46,6 +46,14 @@ send_message_to_human = agentslack.call_tool("send_human_message",
     message="Hey big B, heard you're a big fan of Slack. What's your favorite Slack feature?"
 )
 
+
+
+add_member_to_channel = agentslack.call_tool("add_member_to_channel",
+    your_name="a1",
+    member_to_add="a2",
+    channel_name="test3"
+)
+
 print(f"Humans: {humans}")
 exit()
 
