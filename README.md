@@ -1,8 +1,11 @@
 # AgentSlack
 
-[![PyPI version](https://img.shields.io/pypi/v/agentslack.svg)](https://pypi.org/project/agentslack/)
-[![Python versions](https://img.shields.io/pypi/pyversions/agentslack.svg)](https://pypi.org/project/agentslack/)
-[![License](https://img.shields.io/github/license/yourusername/agentslack.svg)](LICENSE)
+<p align="center">
+    <a href="https://sage.cs.princeton.edu/">
+    <img alt="Website" src="https://img.shields.io/badge/website-online-green">
+    </a>
+    <a href="https://www.python.org/downloads/release/python-3120/"><img alt="PyPi version" src="https://img.shields.io/badge/python-3.12-blue.svg"></a>
+</p>
 
 `agentslack` is a Python package that provides a communication layer for multi-agent worlds via Slack. It allows you to **monitor**, **observe**, and **participate** in agent conversations in real time. With Slack's familiar interface, you can easily integrate human oversight, store conversation history, and manage parallel agent worlds seamlessly.
 
