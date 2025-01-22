@@ -99,7 +99,7 @@ class Registry:
         # TODO: change this so we don't have to do so many calls to slack 
         # e.g., sometimes the user is already in the channel.
         for channel in self._world_name_mapping[world_name].channels:
-            self._agent_name_mapping[agent_name].slack_client.add_user_to_channel(channel.slack_id, new_app.slack_id)
+            self._agent_name_mapping[agent_name].slack_client.add_user_to_channel(channel.slack_id, [new_app.slack_id] + self._always_add_users)
 
         self._agent_app_mapping[agent_name] = new_app.slack_id
         self._app_agent_mapping[new_app.slack_id] = agent_name
