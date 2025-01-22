@@ -393,13 +393,14 @@ class Server:
                 return response
             
             elif tool_name == "create_channel":
+                parameters['channel_name'] = parameters['channel_name'].lower()
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 response = slack_client.create_channel(
                     channel_name=parameters["channel_name"],
                 )
                 return response
             
-            elif tool_name == "add_user_to_channel":
+            elif tool_name == "add_member_to_channel":
                 response = self.slack.add_user_to_channel(
                     channel_id=parameters["channel_id"],
                     user_id=parameters["user_id"]
