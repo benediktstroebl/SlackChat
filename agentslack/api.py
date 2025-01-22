@@ -113,6 +113,15 @@ class Server:
                     "human_name": "string",
                     "message": "string"
                 }
+            ),
+            "add_member_to_channel": Tool(
+                name="add_member_to_channel",
+                description="Add a member to a channel",
+                parameters={
+                    "your_name": "string",
+                    "member_to_add": "string",
+                    "channel_name": "string"
+                }
             )
         }
         self.server_thread = None
@@ -400,6 +409,16 @@ class Server:
             elif tool_name == "open_conversation":
                 response = self.slack.open_conversation(
                     user_ids=parameters["user_ids"]
+                )
+                return response
+            
+            elif tool_name == "add_member_to_channel":
+                agent = self.registry.get_agent(parameters["your_name"])
+                other_agent = self.registry.get_agent(parameters["member_to_add"])
+                channel = self.registry.get_channel(parameters["channel_name"])
+                response = agent.slack_client.add_user_to_channel(
+                    channel_id=channel.slack_id,
+                    user_id=other_agent.slack_app.slack_id
                 )
                 return response
 
