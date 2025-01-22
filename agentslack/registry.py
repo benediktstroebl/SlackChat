@@ -110,9 +110,12 @@ class Registry:
     def get_humans(self) -> List[dict]:
         return [asdict(human) for human in self._humans]
     
+    def get_human_names(self) -> List[str]:
+        return [human.name for human in self._humans]
+    
     def get_human(self, human_name: str) -> Human:
         return next((human for human in self._humans if human.name == human_name), None)
-    
+
     def get_world_starttime_of_agent(self, agent_name: str) -> str:
         return self._world_name_mapping[self._agent_name_mapping[agent_name].world_name].start_datetime
 
