@@ -114,9 +114,7 @@ class Slack:
                         if channel['name'] == channel_name:
                             return {'channel': channel}
                 except SlackApiError as list_error:
-                    print(f"Error listing channels: {list_error}")
-                    return []
-            print(f"Error: {e}")
+                    return [] 
             return []
         
     def list_channels(self):
@@ -124,7 +122,6 @@ class Slack:
             response = self.client.conversations_list()
             return response.data
         except SlackApiError as e:
-            print(f"Error: {e}")
             return {'channels': []}
     
     def add_user_to_channel(self, channel_id: str, user_id: str):
@@ -135,11 +132,10 @@ class Slack:
                 self.client.conversations_info(channel=channel_id)
             except SlackApiError as e:
                 if "channel_not_found" in str(e):
-                    return {"error": "This channel doesn't exist"}
-            response = self.client.conversations_invite(channel=channel_id, users=user_id)
+                    pass 
+            response = self.client.conversations_invite(channel=channel_id, users=[user_id] + self.always_add_users)
             return response.data
         except SlackApiError as e:
-            print(f"Error: {e}")
             return []
 
     def open_conversation(self, user_ids: list[str]):
@@ -149,7 +145,6 @@ class Slack:
             return response 
         
         except SlackApiError as e:
-            print(f"Error: {e}")
             return []
 
     def get_channel_info(self):
