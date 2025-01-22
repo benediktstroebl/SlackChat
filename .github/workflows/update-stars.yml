@@ -21,7 +21,7 @@ jobs:
 
       - name: Update README
         run: |
-          sed -i "/🎵 Look, I was gonna get stars/c\<i>🎵 Look, I was gonna get stars (we've got ${{ env.STAR_COUNT }} now!)<br>" README.md
+          sed -i "/🎵 We thought we'd get stars/c\<i>🎵 We thought we'd get stars (we've got ${{ env.STAR_COUNT }} now!)<br>" README.md
           
       - name: Commit and push if changed
         run: |
