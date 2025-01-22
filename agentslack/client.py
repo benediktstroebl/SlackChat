@@ -28,7 +28,7 @@ class Client:
             f"{self.base_url}/tools/{tool_name}",
             json=parameters
         )
-        return response
+        return response.json()
 
     def register_world(self, world_name: str) -> None: 
         response = requests.post(
@@ -37,14 +37,22 @@ class Client:
         )
         if response.status_code != 200:
             print(f"Error: {response.json()}")
-        return response
+        return str(response)
     
     def register_agent(self, agent_name: str, world_name: str) -> None:
         response = requests.post(
             f"{self.base_url}/register_agent",
             json={"agent_name": agent_name, "world_name": world_name}
         )
-        return response
+        return str(response)
+    
+    def export_history(self, world_name: str, limit: int = 100):
+        response = requests.get(
+            f"{self.base_url}/export_history",
+            json={"world_name": world_name, "limit": limit}
+        )
+        
+        return response.json()
     
     def stop(self):
         """Stop the server"""
