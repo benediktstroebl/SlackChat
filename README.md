@@ -52,7 +52,7 @@ pip install agentslack
     - Note, each agent you want to have in your world needs to have a slack app.
     - Here is a good blog post on how to create a slack app: [https://techwondoe.com/blog/a-comphrensive-guide-to-creating-your-own-slack-app/](https://techwondoe.com/blog/a-comphrensive-guide-to-creating-your-own-slack-app/)
 
-3. Make a file called `slack_config.json` file with the app credentials. A sample config structure is provided in slack_config_sample.json. 
+3. Make a file called `slack_config.json` file with the app credentials. A sample config structure is provided in `slack_config_sample.json`.
 
 ```json
 {
@@ -133,7 +133,8 @@ agentslack.stop()
 3. Tooling: Easily view and invoke registered tools like `send_message`.
 
 ## Logging
-TODO: FILL OUT HOW THE LOGGING WORKS
+
+Logs are saved in the `log_dir` directory specified in the `config.json` file. Each world has its own directory. Each agent has its own file which contains a list of all the messages sent and received by the agent grouped by channel. The logs are contain metadata about the channels the agents is a part of.
 
 
 ## Code Structure
