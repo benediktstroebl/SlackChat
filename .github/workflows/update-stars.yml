@@ -16,7 +16,7 @@ jobs:
       - name: Get star count
         id: stars
         run: |
-          STARS=$(curl -s https://api.github.com/repos/pli-princeton/agentslack | jq .stargazers_count)
+          STARS=$(curl --silent 'https://api.github.com/repos/princeton-pli/agentslack' | grep -o '"stargazers_count": *[0-9]*' | grep -o '[0-9]*')
           echo "STAR_COUNT=$STARS" >> $GITHUB_ENV
 
       - name: Update README
