@@ -398,6 +398,7 @@ class Server:
                 response = slack_client.create_channel(
                     channel_name=parameters["channel_name"],
                 )
+                self.registry.register_channel(parameters["your_name"], parameters["channel_name"], response.data['channel']['id'])
                 return response
             
             elif tool_name == "open_conversation":
