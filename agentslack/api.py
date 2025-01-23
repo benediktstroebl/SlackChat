@@ -42,8 +42,8 @@ class Server:
         self.port = port
         self.registry = Registry()
         self.tools = {
-            "send_dm": Tool(
-                name="send_dm",
+            "send_direct_message": Tool(
+                name="send_direct_message",
                 description="Send a message to a user",
                 parameters={
                     "your_name": "string",
@@ -51,8 +51,8 @@ class Server:
                     "message": "string",
                 }
             ),
-            "send_broadcast": Tool(
-                name="send_broadcast",
+            "send_message_to_channel": Tool(
+                name="send_message_to_channel",
                 description="Send a message to a channel",
                 parameters={
                     "your_name": "string",
@@ -216,7 +216,7 @@ class Server:
             if tool_name not in self.tools:
                 raise HTTPException(status_code=404, detail="Tool not found")
                 
-            if tool_name == "send_dm":
+            if tool_name == "send_direct_message":
                 if parameters["recipient_name"] not in self.registry.get_all_agent_names():
                     if parameters['recipient_name'] in self.registry.get_all_human_names():
                         return f"You are trying to send a message to a human. For that use the send_message_to_human tool."
@@ -243,7 +243,7 @@ class Server:
                 self._update_agent_read_messages(parameters["your_name"], channel_id, [Message(message=parameters["message"], channel_id=channel_id, user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id, timestamp=time.time(), agent_name=parameters["your_name"])])
                 return response
             
-            elif tool_name == "send_broadcast":
+            elif tool_name == "send_message_to_channel":
                 # send message to a channel 
                 if parameters["your_name"] not in self.registry.get_all_agent_names():
                     return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_all_agent_names()}"
@@ -285,16 +285,16 @@ class Server:
                 # restrict to messages after the world start datetime 
                 messages = response['messages']
                 messages = [msg for msg in messages if datetime.fromtimestamp(float(msg['ts'])).timestamp() > world_start_datetime]
-                messages = [Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts']) for message in messages]
+                messages = [Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'], agent_name=self.registry.get_agent_name_from_id(message['user'])) for message in messages]
                 # update the agent's channel with these messages
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
                 return messages
             
             elif tool_name == "read_dm":
-                if parameters["your_name"] not in self.registry.get_agent_names():
-                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
-                if parameters["sender_name"] not in self.registry.get_agent_names() and parameters["sender_name"] not in self.registry.get_all_human_names():
-                    return f"The sender '{parameters['sender_name']}' does not exist, here are possible agents: {self.registry.get_agent_names()}"
+                if parameters["your_name"] not in self.registry.get_all_agent_names():
+                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_all_agent_names()}"
+                if parameters["sender_name"] not in self.registry.get_all_agent_names() and parameters["sender_name"] not in self.registry.get_all_human_names():
+                    return f"The sender '{parameters['sender_name']}' does not exist, here are possible agents: {self.registry.get_all_agent_names()}"
                 
                 # NOTE: DMs for now are only between two agents (plus humans), i.e., we don't allow for mpim
                 
@@ -340,9 +340,9 @@ class Server:
                 return messages
             
             elif tool_name == "check_ongoing_dms":
-                if parameters["your_name"] not in self.registry.get_agent_names():
+                if parameters["your_name"] not in self.registry.get_all_agent_names():
                     # TODO: think about whether we should return all agents in the world 
-                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
+                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_all_agent_names()}"
                 response = self.registry.get_agent(parameters["your_name"]).slack_client.check_ongoing_dms()
                 return response
             
@@ -350,8 +350,8 @@ class Server:
                 # This should be the main endpoint for the agent to check for new messages
                 # return all new messages channels and dms the user is a part of 
                 # ensure the timestamp of the messages is greater than the start of the world 
-                if parameters["your_name"] not in self.registry.get_agent_names():
-                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_agent_names()}"
+                if parameters["your_name"] not in self.registry.get_all_agent_names():
+                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_all_agent_names()}"
                 
                 # get agent information 
                 agent = self.registry.get_agent(parameters["your_name"])
@@ -428,7 +428,7 @@ class Server:
                 response = slack_client.create_channel(
                     channel_name=parameters["channel_name"],
                 )
-                print(f"[DEBUG] Response: {response['channel']['id']}")
+                
                 self.registry.register_channel(parameters["your_name"], response['channel']['id'], parameters["channel_name"])
                 return response
             
@@ -440,8 +440,18 @@ class Server:
             
             elif tool_name == "add_member_to_channel":
                 agent = self.registry.get_agent(parameters["your_name"])
-                other_agent = self.registry.get_agent(parameters["member_to_add"])
+                
+                if parameters["member_to_add"] not in self.registry.get_all_agent_names():
+                    if parameters["member_to_add"] in self.registry.get_all_human_names():
+                        return f"You are trying to add a human to a channel. You can't add humans to a channel directly. Ask the human directly to join."
+                    else:
+                        return f"The member '{parameters['member_to_add']}' does not exist, here are the names of all agents: {self.registry.get_all_agent_names()}"
+                else:
+                    other_agent = self.registry.get_agent(parameters["member_to_add"])
+                
+                
                 channel = self.registry.get_channel(parameters["channel_name"])
+                
                 response = agent.slack_client.add_user_to_channel(
                     channel_id=channel.slack_id,
                     user_id=[other_agent.slack_app.slack_id]
