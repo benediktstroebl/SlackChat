@@ -164,7 +164,7 @@ class Server:
                     Message(message=parameters["message"], 
                             channel_id=channel_id, 
                             user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id, 
-                            timestamp=time.time(), 
+                            timestamp=datetime.now().timestamp(), 
                             agent_name=parameters["your_name"])])
                 return response
             
@@ -187,7 +187,7 @@ class Server:
                     message=parameters["message"], 
                     channel_id=channel_id, 
                     user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
-                    timestamp=time.time(), 
+                    timestamp=datetime.now().timestamp(), 
                     agent_name=parameters["your_name"])])
                 self.update_channels(parameters["your_name"])
                 return response
@@ -228,7 +228,7 @@ class Server:
                         message=message['text'], 
                         channel_id=channel_id, 
                         user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
-                        timestamp=message['ts'], 
+                        timestamp=datetime.fromtimestamp(float(message['ts'])).timestamp(), 
                         agent_name=self.extract_username_from_message(message)    
                     ) for message in messages]
                 # update the agent's channel with these messages
@@ -277,7 +277,7 @@ class Server:
                             message=message['text'], 
                             channel_id=channel_id, 
                             user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
-                            timestamp=message['ts'].split('.')[0], 
+                            timestamp=datetime.fromtimestamp(float(message['ts'])).timestamp(), 
                             agent_name=self.extract_username_from_message(message)
                         )
                     )
@@ -334,8 +334,8 @@ class Server:
                             message=msg['text'], 
                             channel_id=channel_id, 
                             user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
-                            timestamp=msg['ts'].split('.')[0], 
-                            agent_name=self.extract_username_from_message(msg)
+                            timestamp=datetime.fromtimestamp(float(msg['ts'])).timestamp(), 
+                            agent_name=username
                         ))
                     
                     if len(msgs_new) == 0:
