@@ -14,8 +14,6 @@ from agentslack.types import Message, Channel, Agent
 from agentslack.registry import Registry
 
 
-
-
 class Tool(BaseModel):
     name: str
     description: str
@@ -157,11 +155,17 @@ class Server:
 
                 response = slack_client.send_messsage(
                     message=parameters["message"],
-                    target_channel_id=channel_id
+                    target_channel_id=channel_id,
+                    username=parameters["your_name"]
                 )
                 self.update_channels(parameters["your_name"])
                 # update the agent's channel with this message
-                self._update_agent_read_messages(parameters["your_name"], channel_id, [Message(message=parameters["message"], channel_id=channel_id, user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id, timestamp=time.time(), agent_name=parameters["your_name"])])
+                self._update_agent_read_messages(parameters["your_name"], channel_id, [
+                    Message(message=parameters["message"], 
+                            channel_id=channel_id, 
+                            user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id, 
+                            timestamp=time.time(), 
+                            agent_name=parameters["your_name"])])
                 return response
             
             elif tool_name == "send_message_to_channel":
@@ -171,14 +175,20 @@ class Server:
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 channel_name = parameters["channel_name"]
                 if not self.channel_exists(parameters["your_name"], channel_name):
-                    return self.channel_doesnt_exist_error(channel_name=channel_name)
+                    return self.channel_doesnt_exist_error(agent_name=parameters["your_name"], channel_name=channel_name)
                 channel_id = self.registry.get_channel(channel_name).slack_id
                 response = slack_client.send_messsage(
                     message=parameters["message"],
-                    target_channel_id=channel_id
+                    target_channel_id=channel_id,
+                    username=parameters["your_name"]
                 )
                 # update the agent's channel with this message
-                self._update_agent_read_messages(parameters["your_name"], channel_id, [Message(message=parameters["message"], channel_id=channel_id, user_id=parameters["your_name"], timestamp=time.time(), agent_name=parameters["your_name"])])
+                self._update_agent_read_messages(parameters["your_name"], channel_id, [Message(
+                    message=parameters["message"], 
+                    channel_id=channel_id, 
+                    user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
+                    timestamp=time.time(), 
+                    agent_name=parameters["your_name"])])
                 self.update_channels(parameters["your_name"])
                 return response
 
@@ -194,7 +204,7 @@ class Server:
                     return self.return_agent_doesnt_exist_error(parameters["your_name"])
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 if not self.channel_exists(parameters["your_name"], parameters["channel_name"]):
-                    return self.channel_doesnt_exist_error(channel_name=parameters["channel_name"])
+                    return self.channel_doesnt_exist_error(agent_name=parameters["your_name"], channel_name=parameters["channel_name"])
 
                 channel_id = self.registry.get_channel(parameters["channel_name"]).slack_id
 
@@ -210,18 +220,13 @@ class Server:
                 # restrict to messages after the world start datetime 
                 messages = response['messages']
                 messages = [msg for msg in messages if datetime.fromtimestamp(float(msg['ts'])).timestamp() > world_start_datetime]
-                for message in messages:
-                    if message['user'] in self.registry.get_all_agent_names():
-                        message['agent_name'] = self.registry.get_agent_name_from_id(message['user'])
-                    else:
-                        message['agent_name'] = self.registry.get_human_name_from_id(message['user'])
                 messages = [
                     Message(
                         message=message['text'], 
                         channel_id=channel_id, 
-                        user_id=message['user'], 
+                        user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
                         timestamp=message['ts'], 
-                        agent_name=message['agent_name']    
+                        agent_name=message['username']    
                     ) for message in messages]
                 # update the agent's channel with these messages
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
@@ -264,19 +269,15 @@ class Server:
                     return response.get('error')
                 messages = []
                 for message in response['messages']:
-                    if message['user'] in self.registry.get_all_agent_names():
-                        message['agent_name'] = self.registry.get_agent_name_from_id(message['user'])
-                    else:
-                        message['agent_name'] = self.registry.get_human_name_from_id(message['user'])
                     if datetime.fromtimestamp(float(message['ts'])).timestamp() >= world_start_datetime:
                         messages.append(Message(
                             message=message['text'], 
                             channel_id=channel_id, 
-                            user_id=message['user'], 
+                            user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
                             timestamp=message['ts'].split('.')[0], 
-                            agent_name=message['agent_name']
-                            )
+                            agent_name=message['username']
                         )
+                    )
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
                 return messages
             
@@ -324,9 +325,9 @@ class Server:
                     msgs_after = [Message(
                         message=message['text'], 
                         channel_id=channel_id, 
-                        user_id=message['user'], 
+                        user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
                         timestamp=message['ts'].split('.')[0], 
-                        agent_name=self.registry.get_agent_name_from_id(message['user'])) 
+                        agent_name=message['username']) 
                         for message in msgs_after]
                     
                     if len(msgs_after) == 0:
@@ -363,7 +364,8 @@ class Server:
 
                 response = slack_client.send_messsage(
                     message=parameters["message"],
-                    target_channel_id=channel_id
+                    target_channel_id=channel_id,
+                    username=parameters["your_name"]
                 )
                 # update the agent's channel with this message
                 self._update_agent_read_messages(
@@ -380,8 +382,8 @@ class Server:
             elif tool_name == "create_channel":
                 parameters['channel_name'] = parameters['channel_name'].lower()
                 
-                if parameters["your_name"] not in self.registry.get_all_agent_names():
-                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_all_agent_names()}"
+                if not self.agent_exists(parameters["your_name"]):
+                    return self.return_agent_doesnt_exist_error(parameters["your_name"])
                 
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 response = slack_client.create_channel(
@@ -411,7 +413,7 @@ class Server:
                     other_agent = self.registry.get_agent(parameters["member_to_add"])
                 
                 if not self.channel_exists(parameters["your_name"], parameters["channel_name"]):
-                    return self.channel_doesnt_exist_error(channel_name=parameters["channel_name"])
+                    return self.channel_doesnt_exist_error(agent_name=parameters["your_name"], channel_name=parameters["channel_name"])
                 
                 channel = self.registry.get_channel(parameters["channel_name"])
                 
@@ -490,7 +492,7 @@ class Server:
         channel_name = channel_name if channel_name else 'this channel'
         response = f"Sorry {channel_name} doesn't exist, you can create a new channel with the create_channel tool."
         if channel_names:
-            response += f"Here is a list of all the channels you have access to: {channel_names}"
+            response += f" Here is a list of all the channels you have access to: {channel_names}"
         return response
 
     def return_agent_doesnt_exist_error(self, agent_name: str, sender: bool = False) -> str:
