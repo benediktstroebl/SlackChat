@@ -60,8 +60,8 @@ class Server:
                     "message": "string",
                 }
             ),
-            "read_dm": Tool(
-                name="read_dm",
+            "read_direct_message": Tool(
+                name="read_direct_message",
                 description="Read a direct message",
                 parameters={
                     "your_name": "string",
@@ -234,7 +234,7 @@ class Server:
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
                 return messages
             
-            elif tool_name == "read_dm":
+            elif tool_name == "read_direct_message":
                 if not self.agent_exists(parameters["your_name"]):
                     return self.return_agent_doesnt_exist_error(parameters["your_name"])
                 if not self.agent_exists(parameters["sender_name"]):

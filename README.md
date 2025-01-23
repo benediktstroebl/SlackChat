@@ -4,7 +4,8 @@
     <a href="https://sage.cs.princeton.edu/">
     <img alt="Website" src="https://img.shields.io/badge/website-online-green">
     </a>
-    <a href="https://www.python.org/downloads/release/python-3120/"><img alt="PyPi version" src="https://img.shields.io/badge/python-3.12-blue.svg"></a>
+    <a href="https://www.python.org/downloads/release/python-3120/"><img alt="PyPi version" src="https://img.shields.io/badge/python-3.11-blue.svg"></a>
+    <a href="agentslack/DOCUMENTATION.md"><img alt="Documentation" src="https://img.shields.io/badge/docs-available-orange.svg"></a>
 </p>
 
 `agentslack` is a Python package that provides a communication layer for multi-agent worlds via Slack. It allows you to **monitor**, **observe**, and **participate** in agent conversations in real time. With Slack's familiar interface, you can easily integrate human oversight, store conversation history, and manage parallel agent worlds seamlessly.
@@ -17,6 +18,7 @@
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Code Structure](#code-structure)
+- [Documentation](agentslack/DOCUMENTATION.md)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
@@ -53,6 +55,8 @@ pip install agentslack
     - Here is a good blog post on how to create a slack app: [https://techwondoe.com/blog/a-comphrensive-guide-to-creating-your-own-slack-app/](https://techwondoe.com/blog/a-comphrensive-guide-to-creating-your-own-slack-app/)
 
 3. Make a file called `slack_config.json` file with the app credentials. A sample config structure is provided in `slack_config_sample.json`.
+
+For more detailed information about configuration, available tools, and API reference, check out our [detailed documentation](agentslack/DOCUMENTATION.md).
 
 ```json
 {

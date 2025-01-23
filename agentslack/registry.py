@@ -5,6 +5,7 @@ from dataclasses import asdict
 from datetime import datetime
 from copy import deepcopy
 from agentslack.Slack import Slack
+from agentslack.validate import validate_configs
 from agentslack.types import Agent, Channel, World, Message, SlackApp, Human
 
 class RegistryError(Exception):
@@ -27,6 +28,9 @@ class Registry:
             
         with open('config.json', 'r') as file:
             self.config = json.load(file)
+
+        # Validate configs
+        validate_configs(self.slack_config, self.config)
 
         os.environ['SLACK_CLIENT_ID'] = self.slack_config['slack_client_id']
         os.environ['SLACK_CLIENT_SECRET'] = self.slack_config['slack_client_secret']

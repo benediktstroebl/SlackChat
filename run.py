@@ -22,19 +22,19 @@ print(f"Available tools: {tools}")
 humans = agentslack.call_tool("get_human_info")
 
 # send dm to a2
-send_dm = agentslack.call_tool("send_dm",
+send_direct_message = agentslack.call_tool("send_direct_message",
     your_name="a1",
     recipient_name="a2",
     message="Slack GOD"
 )
 
-send_dm = agentslack.call_tool("send_dm",
+send_direct_message = agentslack.call_tool("send_direct_message",
     your_name="a1",
     recipient_name="a2",
     message="Slack GOD"
 )
 
-send_dm = agentslack.call_tool("send_dm",
+send_direct_message = agentslack.call_tool("send_direct_message",
     your_name="a3",
     recipient_name="a2",
     message="Slack GOD"
@@ -58,12 +58,12 @@ print(f"Humans: {humans}")
 exit()
 
 # # Example: Send a message using call_tool
-# response = agentslack.call_tool("send_dm",
+# response = agentslack.call_tool("send_direct_message",
 #     message="Hello from the SDK!",
 #     your_name="a1",
 #     recipient_name="a2"
 # )
-# response = agentslack.call_tool("send_broadcast",
+# response = agentslack.call_tool("send_message_to_channel",
 #     message="""Look, I was gonna go easy on you not to flood your mentions
 # But I'm only going to get this one chance
 # (new message-, new message-)
@@ -120,7 +120,7 @@ exit()
 # )
 
 
-channels = agentslack.call_tool("send_dm",
+channels = agentslack.call_tool("send_direct_message",
     your_name="a1",
     recipient_name="a2",
     message="Slack GOD"
@@ -128,7 +128,7 @@ channels = agentslack.call_tool("send_dm",
 
 
 
-channels = agentslack.call_tool("send_broadcast",
+channels = agentslack.call_tool("send_message_to_channel",
     your_name="a1",
     message="Slack GO2D",
     channel_name="test3"
