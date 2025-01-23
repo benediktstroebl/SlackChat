@@ -128,6 +128,7 @@ class Slack:
     def add_user_to_channel(self, channel_id: str, user_id: list[str]):
         # channels.invite()
         try:
+
             # First check if channel exists by trying to get info
             try:
                 self.client.conversations_info(channel=channel_id)

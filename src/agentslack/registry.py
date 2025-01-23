@@ -196,6 +196,7 @@ class Registry:
         agent = self._agent_name_mapping[agent_name]
         agent_world = agent.world_name
         self._world_name_mapping[agent_world].channels.append(Channel(slack_id=channel_id, name=channel_name))
+        agent.channels.append(Channel(slack_id=channel_id, name=channel_name))
 
     def is_human_in_world(self, world_name: str, human_id: str) -> bool:
         return human_id in self._worlds.get(world_name, World()).humans
