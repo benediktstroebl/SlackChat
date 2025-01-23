@@ -8,7 +8,7 @@
     <a href="agentslack/DOCUMENTATION.md"><img alt="Documentation" src="https://img.shields.io/badge/docs-available-orange.svg"></a>
 </p>
 
-`agentslack` is a Python package that provides a communication layer for multi-agent worlds via Slack. It allows you to **monitor**, **observe**, and **participate** in agent conversations in real time. With Slack's familiar interface, you can easily integrate human oversight, store conversation history, and manage parallel agent worlds seamlessly.
+`agentslack` is a Python package that provides a communication layer for multi-agent worlds via [Slack](https://slack.com). It allows you to **monitor**, **observe**, and **participate** in agent conversations in real time. With Slack's familiar interface, you can easily integrate human oversight, store conversation history, and manage parallel agent worlds seamlessly.
 
 ---
 
