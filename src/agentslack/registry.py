@@ -51,6 +51,7 @@ class Registry:
         self._always_add_users: List[str] = self.slack_config['always_add_users'] + [self.slack_config['slack_app_info']['world_app']['slack_member_id']]
 
         self._humans: List[Human] = [Human(slack_member_id=human['slack_member_id'], name=human['name'], expertise=human['expertise']) for human in self.slack_config['humans']]
+        self._human_id_mapping: Dict[str, Human] = {human.slack_member_id: human for human in self._humans}
         
         self.world_client = Slack(slack_token=self.slack_config['slack_app_info']['world_app']['slack_token'], always_add_users=self._always_add_users)
         self.world_token = self.slack_config['slack_app_info']['world_app']['slack_token']
@@ -92,7 +93,10 @@ class Registry:
         
         new_app = self._slack_apps[num_agents]
 
-        self._agent_slack_clients[agent_name] = Slack(slack_token=new_app.slack_token, always_add_users=self._always_add_users)
+        self._agent_slack_clients[agent_name] = Slack(
+            slack_token=new_app.slack_token, 
+            always_add_users=self.get_always_add_users()
+            )
 
         self._agent_name_mapping[agent_name] = Agent(world_name=world_name, 
                                                      agent_name=agent_name,
@@ -103,7 +107,8 @@ class Registry:
         # TODO: change this so we don't have to do so many calls to slack 
         # e.g., sometimes the user is already in the channel.
         for channel in self._world_name_mapping[world_name].channels:
-            self._agent_name_mapping[agent_name].slack_client.add_user_to_channel(channel.slack_id, [new_app.slack_id] + self._always_add_users)
+            self._agent_name_mapping[agent_name].slack_client.add_user_to_channel(
+                channel.slack_id, [new_app.slack_id] + self.get_always_add_users())
 
         self._agent_app_mapping[agent_name] = new_app.slack_id
         self._app_agent_mapping[new_app.slack_id] = agent_name
@@ -113,6 +118,14 @@ class Registry:
     
     def get_agent_names(self) -> List[str]:
         return list(self._agent_name_mapping.keys())
+    
+    def name_from_any_id(self, user_id: str) -> str:
+        if user_id in self._app_agent_mapping:
+            return self._app_agent_mapping[user_id]
+        for human in self._humans:
+            if human.slack_member_id == user_id:
+                return human.name
+        return user_id
 
     def get_human_name_from_id(self, slack_app_id: str) -> str:
         for human in self._humans:

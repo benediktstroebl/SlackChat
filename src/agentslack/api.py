@@ -220,13 +220,16 @@ class Server:
                 # restrict to messages after the world start datetime 
                 messages = response['messages']
                 messages = [msg for msg in messages if datetime.fromtimestamp(float(msg['ts'])).timestamp() > world_start_datetime]
+                if len(messages) == 0:
+                    return "There are no messages in this channel after the world start datetime."
+                print(messages)
                 messages = [
                     Message(
                         message=message['text'], 
                         channel_id=channel_id, 
                         user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
                         timestamp=message['ts'], 
-                        agent_name=message['username']    
+                        agent_name=self.extract_username_from_message(message)    
                     ) for message in messages]
                 # update the agent's channel with these messages
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
@@ -275,7 +278,7 @@ class Server:
                             channel_id=channel_id, 
                             user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
                             timestamp=message['ts'].split('.')[0], 
-                            agent_name=message['username']
+                            agent_name=self.extract_username_from_message(message)
                         )
                     )
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
@@ -320,21 +323,26 @@ class Server:
 
                     # filter to make sure the messages are after the world start datetime
                     msgs_after = [msg for msg in messages if datetime.fromtimestamp(float(msg['ts'])).timestamp() >= world_start_datetime]
-
-                    # convert to Message objects 
-                    msgs_after = [Message(
-                        message=message['text'], 
-                        channel_id=channel_id, 
-                        user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
-                        timestamp=message['ts'].split('.')[0], 
-                        agent_name=message['username']) 
-                        for message in msgs_after]
-                    
                     if len(msgs_after) == 0:
+                        continue
+                    print(msgs_after)
+                    # convert to Message objects 
+                    msgs_new = []
+                    for msg in msgs_after:
+                        username = self.extract_username_from_message(msg)
+                        msgs_new.append(Message(
+                            message=msg['text'], 
+                            channel_id=channel_id, 
+                            user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
+                            timestamp=msg['ts'].split('.')[0], 
+                            agent_name=self.extract_username_from_message(msg)
+                        ))
+                    
+                    if len(msgs_new) == 0:
                         continue
     
                     # filter out messages that the agent has already seen
-                    new_messages = self.only_show_new_messages(parameters["your_name"], channel_id, msgs_after)
+                    new_messages = self.only_show_new_messages(parameters["your_name"], channel_id, msgs_new)
                     all_new_messages.append(new_messages)
                     # update the agent's channel with these new messages
                     self._update_agent_read_messages(parameters["your_name"], channel_id, new_messages)
@@ -474,6 +482,13 @@ class Server:
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
 
+    def extract_username_from_message(self, message: dict) -> str:
+        try:
+            username = message['username']
+        except KeyError:
+            username = self.registry.name_from_any_id(message['user'])
+        return username
+
     def channel_exists(self, agent_name: str, channel_name: str) -> bool:
         channels = self.registry.get_agent(agent_name).channels
         channel_names = [channel.name for channel in channels]
@@ -489,6 +504,7 @@ class Server:
     
     def channel_doesnt_exist_error(self, agent_name: str, channel_name: str=None) -> str:
         channel_names = [channel.name for channel in self.registry.get_agent(agent_name).channels]
+        channel_names = [name for name in channel_names if ',' not in name]
         channel_name = channel_name if channel_name else 'this channel'
         response = f"Sorry {channel_name} doesn't exist, you can create a new channel with the create_channel tool."
         if channel_names:
@@ -531,9 +547,16 @@ class Server:
                     channel_members = agent.slack_client.get_channel_members(channel['id'])['members']
                     
                     # remove always add users from channel members
-                    channel_members = [member for member in channel_members if member not in self.registry.get_always_add_users()]
-                    
-                    all_channels.append(Channel(slack_id=channel['id'], name=",".join(channel_members)))
+                    channel_members = [member for member in channel_members]
+                    # convert channel_members to there names 
+                    # TODO: a failure mode can arise where always_add_users is the same as the _humans.
+                    # in this case we will always show the agents the channel names with the humans in them 
+                    # for now i will fix this by not showing any of the dms when we call channel error string.
+                    channel_names = [self.registry.name_from_any_id(member) for member in channel_members]
+                    # remove None values
+                    channel_names = [name for name in channel_names if name is not None]
+
+                    all_channels.append(Channel(slack_id=channel['id'], name=",".join(channel_names)))
                     existing_channel_ids.add(channel['id'])
                     
         if channels.get('channels'):
