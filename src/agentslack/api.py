@@ -143,8 +143,11 @@ class Server:
                         return self.return_agent_doesnt_exist_error(parameters["recipient_name"])
                 if not self.agent_exists(parameters["your_name"]):
                     return self.return_agent_doesnt_exist_error(parameters["your_name"])
-                
-                slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
+
+                self.update_channels(parameters["your_name"])
+                agent = self.registry.get_agent(parameters["your_name"])
+                slack_client = agent.slack_client
+
                 id_of_recipient = self.registry.get_agent(parameters["recipient_name"]).slack_app.slack_id
                 
                 response = slack_client.open_conversation(user_ids=[id_of_recipient])
@@ -172,6 +175,7 @@ class Server:
                 # send message to a channel 
                 if not self.agent_exists(parameters["your_name"]):
                     return self.return_agent_doesnt_exist_error(parameters["your_name"])
+                self.update_channels(parameters["your_name"])
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 channel_name = parameters["channel_name"]
                 if not self.channel_exists(parameters["your_name"], channel_name):
@@ -195,6 +199,7 @@ class Server:
             elif tool_name == "list_channels":
                 if not self.agent_exists(parameters["your_name"]):
                     return self.return_agent_doesnt_exist_error(parameters["your_name"])
+                self.update_channels(parameters["your_name"])
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client    
                 response = slack_client.list_channels()
                 return response['channels']
@@ -202,6 +207,7 @@ class Server:
             elif tool_name == "read_channel":
                 if not self.agent_exists(parameters["your_name"]):
                     return self.return_agent_doesnt_exist_error(parameters["your_name"])
+                self.update_channels(parameters["your_name"])
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 if not self.channel_exists(parameters["your_name"], parameters["channel_name"]):
                     return self.channel_doesnt_exist_error(agent_name=parameters["your_name"], channel_name=parameters["channel_name"])
@@ -240,6 +246,7 @@ class Server:
                     return self.return_agent_doesnt_exist_error(parameters["your_name"])
                 if not self.agent_exists(parameters["sender_name"]):
                     return self.return_agent_doesnt_exist_error(parameters["sender_name"], sender=True)
+                self.update_channels(parameters["your_name"])
                 
                 # NOTE: DMs for now are only between two agents (plus humans), i.e., we don't allow for mpim
                 total_users = len(self.registry.get_humans()) + 2
@@ -287,6 +294,7 @@ class Server:
             elif tool_name == "check_ongoing_dms":
                 if not self.agent_exists(parameters["your_name"]):
                     return self.return_agent_doesnt_exist_error(parameters["your_name"])
+                self.update_channels(parameters["your_name"])
                 response = self.registry.get_agent(parameters["your_name"]).slack_client.check_ongoing_dms()
                 return response
             
@@ -294,9 +302,11 @@ class Server:
                 # This should be the main endpoint for the agent to check for new messages
                 # return all new messages channels and dms the user is a part of 
                 # ensure the timestamp of the messages is greater than the start of the world 
+
                 if not self.agent_exists(parameters["your_name"]):
                     return self.return_agent_doesnt_exist_error(parameters["your_name"])
-                
+                self.update_channels(parameters["your_name"])
+
                 # get agent information 
                 agent = self.registry.get_agent(parameters["your_name"])
                 agent_id = agent.slack_app.slack_id
