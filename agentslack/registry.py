@@ -5,7 +5,7 @@ from dataclasses import asdict
 from datetime import datetime
 from copy import deepcopy
 from agentslack.Slack import Slack
-from agentslack.types_ import Agent, Channel, World, Message, SlackApp, Human
+from agentslack.types import Agent, Channel, World, Message, SlackApp, Human
 
 class RegistryError(Exception):
     """Base exception for registry errors"""
