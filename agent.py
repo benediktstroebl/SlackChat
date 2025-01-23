@@ -11,7 +11,7 @@ agentslack = AgentSlack(port=8054)
 
 
 @tool
-def send_dm(message: str, your_name: str, recipient_name: str) -> str:
+def send_direct_message(message: str, your_name: str, recipient_name: str) -> str:
     """
     Send a direct message to another agents.
     Args:
@@ -19,7 +19,7 @@ def send_dm(message: str, your_name: str, recipient_name: str) -> str:
         your_name: The name of the agent sending the message.
         recipient_name: The name of the agent receiving the message.
     """
-    return agentslack.call_tool("send_dm", message=message, your_name=your_name, recipient_name=recipient_name)
+    return agentslack.call_tool("send_direct_message", message=message, your_name=your_name, recipient_name=recipient_name)
 
 @tool
 def list_channels(your_name: str) -> str:
@@ -31,7 +31,7 @@ def list_channels(your_name: str) -> str:
     return agentslack.call_tool("list_channels", your_name=your_name)
 
 @tool
-def send_broadcast(message: str, your_name: str, channel_name: str) -> str:
+def send_message_to_channel(message: str, your_name: str, channel_name: str) -> str:
     """
     Send a message to a channel.
     Args:
@@ -39,7 +39,7 @@ def send_broadcast(message: str, your_name: str, channel_name: str) -> str:
         your_name: The name of the agent sending the message.
         channel_name: The name of the channel to send the message to.
     """
-    return agentslack.call_tool("send_broadcast", message=message, your_name=your_name, channel_name=channel_name)
+    return agentslack.call_tool("send_message_to_channel", message=message, your_name=your_name, channel_name=channel_name)
 
 @tool
 def read_dm(your_name: str, sender_name: str) -> str:
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     name = sys.argv[1] if len(sys.argv) > 1 else "a1"
     prompt = sys.argv[2] if len(sys.argv) > 2 else "You are agent a1. Communicate with other agents and use available tools."
     model = LiteLLMModel(model_id="gpt-4o-mini")
-    a1 = ToolCallingAgent(tools=[send_dm, list_channels, send_broadcast, read_dm, read_channel], model=model, max_steps=3, stream_json_logs=True, json_logs_path=f"{name}.jsonl")
+    a1 = ToolCallingAgent(tools=[send_direct_message, list_channels, send_message_to_channel, read_dm, read_channel], model=model, max_steps=3, stream_json_logs=True, json_logs_path=f"{name}.jsonl")
     a1.run(prompt)
 
 

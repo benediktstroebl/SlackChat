@@ -218,7 +218,7 @@ class Server:
                 
             if tool_name == "send_direct_message":
                 if parameters["recipient_name"] not in self.registry.get_all_agent_names():
-                    if parameters['recipient_name'] in self.registry.get_all_human_names():
+                    if parameters['recipient_name'] in self.registry.get_human_names():
                         return f"You are trying to send a message to a human. For that use the send_message_to_human tool."
                     else:
                         return f"The recipient '{parameters['recipient_name']}' does not exist, here are possible agents: {self.registry.get_all_agent_names()}"
@@ -280,6 +280,10 @@ class Server:
 
                 # TODO add error if the channel doesn't exist
                 response = slack_client.read(channel_id=channel_id)
+                
+                if len(response['messages']) == 0:
+                    return "You are not a member of this channel, you can't read it."
+                
                 agent = self.registry.get_agent(parameters["your_name"])
                 world_start_datetime = self.registry.get_world(agent.world_name).start_datetime
                 # restrict to messages after the world start datetime 
@@ -293,7 +297,7 @@ class Server:
             elif tool_name == "read_dm":
                 if parameters["your_name"] not in self.registry.get_all_agent_names():
                     return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_all_agent_names()}"
-                if parameters["sender_name"] not in self.registry.get_all_agent_names() and parameters["sender_name"] not in self.registry.get_all_human_names():
+                if parameters["sender_name"] not in self.registry.get_all_agent_names() and parameters["sender_name"] not in self.registry.get_human_names():
                     return f"The sender '{parameters['sender_name']}' does not exist, here are possible agents: {self.registry.get_all_agent_names()}"
                 
                 # NOTE: DMs for now are only between two agents (plus humans), i.e., we don't allow for mpim
@@ -410,8 +414,8 @@ class Server:
                 
                 human_id = self.registry.get_human(parameters["human_name"]).slack_member_id
 
-                if parameters["human_name"] not in self.registry.get_all_human_names():
-                    return f"The human '{parameters['human_name']}' does not exist, here are possible humans: {self.registry.get_all_human_names()}"
+                if parameters["human_name"] not in self.registry.get_human_names():
+                    return f"The human '{parameters['human_name']}' does not exist, here are possible humans: {self.registry.get_human_names()}"
 
                 response = slack_client.open_conversation(user_ids=[human_id])
                 if response['ok']:
@@ -449,7 +453,7 @@ class Server:
                 agent = self.registry.get_agent(parameters["your_name"])
                 
                 if parameters["member_to_add"] not in self.registry.get_all_agent_names():
-                    if parameters["member_to_add"] in self.registry.get_all_human_names():
+                    if parameters["member_to_add"] in self.registry.get_human_names():
                         return f"You are trying to add a human to a channel. You can't add humans to a channel directly. Ask the human directly to join."
                     else:
                         return f"The member '{parameters['member_to_add']}' does not exist, here are the names of all agents: {self.registry.get_all_agent_names()}"

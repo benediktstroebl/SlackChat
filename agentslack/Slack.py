@@ -136,7 +136,8 @@ class Slack:
             response = self.client.conversations_invite(channel=channel_id, users=user_id + self.always_add_users)
             return response.data
         except SlackApiError as e:
-            return []
+            print(f"Error: {e}")
+            return f"Error adding user to channel: {e}"
 
     def open_conversation(self, user_ids: list[str]):
         # unlike a channel this opens a conversation with a user. 
