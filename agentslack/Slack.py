@@ -74,11 +74,12 @@ class Slack:
             # print(f"Error: {e}")
             return {'members': []}
 
-    def send_messsage(self, message: str, target_channel_id: str):
+    def send_messsage(self, message: str, target_channel_id: str, username: str):
         try:
             response = self.client.chat_postMessage(
                 channel=target_channel_id,
                 text=message,
+                username=username
             )
             return "Message sent!" 
         except SlackApiError as e:
@@ -136,7 +137,6 @@ class Slack:
             response = self.client.conversations_invite(channel=channel_id, users=user_id + self.always_add_users)
             return response.data
         except SlackApiError as e:
-            print(f"Error: {e}")
             return f"Error adding user to channel: {e}"
 
     def open_conversation(self, user_ids: list[str]):
