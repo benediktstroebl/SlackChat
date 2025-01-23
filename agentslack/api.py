@@ -281,6 +281,7 @@ class Server:
                 # TODO add error if the channel doesn't exist
                 response = slack_client.read(channel_id=channel_id)
                 
+                # TODO: this can also be because there are no messages in the channel.
                 if len(response['messages']) == 0:
                     return "You are not a member of this channel, you can't read it."
                 
@@ -289,7 +290,19 @@ class Server:
                 # restrict to messages after the world start datetime 
                 messages = response['messages']
                 messages = [msg for msg in messages if datetime.fromtimestamp(float(msg['ts'])).timestamp() > world_start_datetime]
-                messages = [Message(message=message['text'], channel_id=channel_id, user_id=message['user'], timestamp=message['ts'], agent_name=self.registry.get_agent_name_from_id(message['user'])) for message in messages]
+                for message in messages:
+                    if message['user'] in self.registry.get_all_agent_names():
+                        message['agent_name'] = self.registry.get_agent_name_from_id(message['user'])
+                    else:
+                        message['agent_name'] = self.registry.get_human_name_from_id(message['user'])
+                messages = [
+                    Message(
+                        message=message['text'], 
+                        channel_id=channel_id, 
+                        user_id=message['user'], 
+                        timestamp=message['ts'], 
+                        agent_name=message['agent_name']    
+                    ) for message in messages]
                 # update the agent's channel with these messages
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
                 return messages
@@ -332,14 +345,19 @@ class Server:
                     return response.get('error')
                 messages = []
                 for message in response['messages']:
+                    if message['user'] in self.registry.get_all_agent_names():
+                        message['agent_name'] = self.registry.get_agent_name_from_id(message['user'])
+                    else:
+                        message['agent_name'] = self.registry.get_human_name_from_id(message['user'])
                     if datetime.fromtimestamp(float(message['ts'])).timestamp() >= world_start_datetime:
                         messages.append(Message(
                             message=message['text'], 
                             channel_id=channel_id, 
                             user_id=message['user'], 
                             timestamp=message['ts'].split('.')[0], 
-                            agent_name=self.registry.get_agent_name_from_id(message['user']))
+                            agent_name=message['agent_name']
                             )
+                        )
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
                 return messages
             

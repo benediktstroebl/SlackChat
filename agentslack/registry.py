@@ -106,6 +106,13 @@ class Registry:
 
     def get_agent_name_from_id(self, slack_app_id: str) -> str:
         return self._app_agent_mapping[slack_app_id]
+
+
+    def get_human_name_from_id(self, slack_app_id: str) -> str:
+        for human in self._humans:
+            if human.slack_member_id == slack_app_id:
+                return human.name
+        return None
     
     def get_humans(self) -> List[dict]:
         return [asdict(human) for human in self._humans]
