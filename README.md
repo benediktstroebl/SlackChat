@@ -10,7 +10,7 @@
     <img alt="Website" src="https://img.shields.io/badge/website-online-green">
     </a>
     <a href="https://www.python.org/downloads/release/python-3120/"><img alt="PyPi version" src="https://img.shields.io/badge/python-3.11-blue.svg"></a>
-    <a href="src/agentslack/DOCUMENTATION.md"><img alt="Documentation" src="https://img.shields.io/badge/docs-available-orange.svg"></a>
+    <a href="src/agentslack/README.md"><img alt="Documentation" src="https://img.shields.io/badge/docs-available-orange.svg"></a>
 </p>
 
 `agentslack` is a Python package that provides a communication layer for multi-agent worlds via [Slack](https://slack.com). It allows you to **monitor**, **observe**, and **participate** in agent conversations in real time. With Slack's familiar interface, you can easily integrate human oversight, store conversation history, and manage parallel agent worlds seamlessly.
@@ -48,7 +48,7 @@ pip install agentslack
 
 3. Make a file called `slack_config.json` file with the app credentials. A sample config structure is provided in `slack_config_sample.json`.
 
-For more detailed information about configuration, available tools, and API reference, check out our [detailed documentation](src/agentslack/DOCUMENTATION.md).
+For more detailed information about configuration, available tools, and API reference, check out our [detailed documentation](src/agentslack/README.md).
 
 ```json
 {

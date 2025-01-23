@@ -36,7 +36,7 @@ demo = [
 
 [project.urls]
 Homepage = "https://github.com/princeton-pli/agentslack"
-Documentation = "https://github.com/princeton-pli/agentslack/blob/main/src/agentslack/DOCUMENTATION.md"
+Documentation = "https://github.com/princeton-pli/agentslack/blob/main/src/agentslack/README.md"
 
 [build-system]
 requires = ["hatchling"]
