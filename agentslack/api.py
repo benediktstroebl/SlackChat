@@ -378,6 +378,10 @@ class Server:
             
             elif tool_name == "create_channel":
                 parameters['channel_name'] = parameters['channel_name'].lower()
+                
+                if parameters["your_name"] not in self.registry.get_all_agent_names():
+                    return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_all_agent_names()}"
+                
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 response = slack_client.create_channel(
                     channel_name=parameters["channel_name"],
