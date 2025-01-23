@@ -77,7 +77,13 @@ if __name__ == "__main__":
     name = sys.argv[1] if len(sys.argv) > 1 else "a1"
     prompt = sys.argv[2] if len(sys.argv) > 2 else "You are agent a1. Communicate with other agents and use available tools."
     model = LiteLLMModel(model_id="gpt-4o-mini")
-    a1 = ToolCallingAgent(tools=[send_direct_message, list_channels, send_message_to_channel, read_direct_message, read_channel], model=model, max_steps=3, stream_json_logs=True, json_logs_path=f"{name}.jsonl")
+    a1 = ToolCallingAgent(
+        tools=[send_direct_message, list_channels, send_message_to_channel, read_direct_message, read_channel], 
+        model=model, 
+        max_steps=10, 
+        stream_json_logs=True, 
+        json_logs_path=f"{name}.jsonl"
+        )
     a1.run(prompt)
 
 

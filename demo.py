@@ -16,9 +16,9 @@ for agent in agents:
 # run agent.py three times concurrently
 async def run_agent(agent_name):
     prompts = {
-        'a1': "You are agent a1. Ask a2 a question in a channel.",
-        'a2': "You are agent a2. Wait for a message from a1. Say someting concrete to the a1 that makes it clear you are responding to the message.",
-        'a3': "You are agent a3. Respond to all message from a2."
+        'a1': "You are agent a1. Collaborate with the other agents.",
+        'a2': "You are agent a2. Collaborate with the other agents.",
+        'a3': "You are agent a3. Collaborate with the other agents."
     }
     
     process = await asyncio.create_subprocess_exec('python', 'agent.py', agent_name, prompts[agent_name])
