@@ -1,33 +1,34 @@
 {
     "slack_app_info": {
-        "slack_apps": [
+        "agent_apps": [
             {
                 "slack_token": "<token-agent-1>",
                 "slack_member_id": "<member-id-agent-1>"
             },
             {
-                "slack_token": "<token-agent-2>",
+                "slack_token": "<token-agent-2>", 
                 "slack_member_id": "<member-id-agent-2>"
             },
             {
                 "slack_token": "<token-agent-3>",
                 "slack_member_id": "<member-id-agent-3>"
             }
-        ]
+        ],
+        "world_app": {
+            "slack_token": "<token-world>",
+            "slack_member_id": "<member-id-world>"
+        }
     },
     "humans": [
         {
-            "slack_member_id": "<member-id-agent-1>",
+            "slack_member_id": "<member-id-human-1>",
             "name": "Veniamin",
             "expertise": "Horticulture specialist"
         }, 
         {
             "slack_member_id": "<member-id-human-2>",
-            "name": "Benedikt",
-            "expertise": "Oceanographer (on steroids)",
-            "additional_info": {
-                
-            }
+            "name": "Benedikt", 
+            "expertise": "Oceanographer"
         }
     ],
     "slack_client_id": "<client-id>",
