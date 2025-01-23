@@ -198,10 +198,6 @@ class Registry:
         return (self.is_human_in_world(agent.world_name, human_id) and 
                 human_id not in agent.excluded_humans)
         
-    def register_channel(self, agent_name: str, channel_id: str, channel_name: str) -> None:
-        if agent_name in self._agent_name_mapping:
-            self._agent_name_mapping[agent_name].channels.append(Channel(slack_id=channel_id, name=channel_name))
-            
     def register_dm(self, agent_name: str, dm_id: str) -> None:
         if agent_name in self._agents:
             self._agents[agent_name].dms.add(dm_id)
