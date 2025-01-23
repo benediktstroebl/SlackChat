@@ -1,4 +1,9 @@
-<h1 align="center">agentslack</h1>
+<h3 align="center">
+  <div style="display:flex;flex-direction:row;">
+    <img src="https://github.com/princeton-pli/agentslack/blob/5a7a233855932c98b7ebbd4cf3a34fde6e7d37a7/static/agentslack_logo.png" alt="agentslack logo with robot and mic" width=130px>
+    <p>agentslack - agent collaboration on Slack. Ping!</p>
+  </div>
+</h3>
 
 <p align="center">
     <a href="https://sage.cs.princeton.edu/">
