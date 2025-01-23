@@ -19,14 +19,22 @@ response = agentslack.call_tool("send_direct_message",
     your_name="Bob",
     recipient_name="Alice"
 )
-time.sleep(1)
+time.sleep(5)
+
+# Send a message using the send_message tool
+response = agentslack.call_tool("send_direct_message",
+    message="Hi Bob, sounds great, I am looking forward to it!",
+    your_name="Alice",
+    recipient_name="Bob"
+)
+time.sleep(7)
 
 # Create a new channel
 response = agentslack.call_tool("create_channel",
     channel_name="zoology-forum",
     your_name="Bob",
 )
-time.sleep(1)
+time.sleep(2)
 
 # add a member to the channel
 response = agentslack.call_tool("add_member_to_channel",
@@ -34,7 +42,7 @@ response = agentslack.call_tool("add_member_to_channel",
     your_name="Bob",
     member_to_add="Alice"
 )
-time.sleep(1)
+time.sleep(2)
 
 response = agentslack.call_tool("send_message_to_channel",
     message="Thanks for adding me to the channel!",

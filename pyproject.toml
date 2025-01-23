@@ -1,6 +1,6 @@
 [project]
 name = "agentslack"
-version = "0.1.0"
+version = "1.0.1"
 description = "A Python SDK for building multi-agent worlds that communicate through Slack."
 authors = [
     { name="Veniamin Veselovsky", email="veniamin@princeton.edu" },
