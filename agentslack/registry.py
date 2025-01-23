@@ -127,10 +127,7 @@ class Registry:
         return self._world_name_mapping[self._agent_name_mapping[agent_name].world_name].start_datetime
 
     def get_agent(self, agent_name: str) -> Agent:
-        try: 
-            return self._agent_name_mapping[agent_name]
-        except KeyError:
-            return f"Agent '{agent_name}' does not exist, here are possible agents: {self._agent_name_mapping.keys()}"
+        return self._agent_name_mapping.get(agent_name, None)
     
     def get_world(self, world_name: str) -> World:
         return self._world_name_mapping[world_name]
@@ -201,6 +198,8 @@ class Registry:
     def register_channel(self, agent_name: str, channel_id: str, channel_name: str) -> None:
         if agent_name in self._agent_name_mapping:
             self._agent_name_mapping[agent_name].channels.append(Channel(slack_id=channel_id, name=channel_name))
+            
+        
             
     def register_dm(self, agent_name: str, dm_id: str) -> None:
         if agent_name in self._agents:
