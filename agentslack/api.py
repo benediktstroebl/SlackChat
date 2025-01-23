@@ -14,8 +14,6 @@ from agentslack.types import Message, Channel, Agent
 from agentslack.registry import Registry
 
 
-
-
 class Tool(BaseModel):
     name: str
     description: str
