@@ -5,22 +5,10 @@
     <img alt="Website" src="https://img.shields.io/badge/website-online-green">
     </a>
     <a href="https://www.python.org/downloads/release/python-3120/"><img alt="PyPi version" src="https://img.shields.io/badge/python-3.11-blue.svg"></a>
-    <a href="agentslack/DOCUMENTATION.md"><img alt="Documentation" src="https://img.shields.io/badge/docs-available-orange.svg"></a>
+    <a href="src/agentslack/DOCUMENTATION.md"><img alt="Documentation" src="https://img.shields.io/badge/docs-available-orange.svg"></a>
 </p>
 
 `agentslack` is a Python package that provides a communication layer for multi-agent worlds via [Slack](https://slack.com). It allows you to **monitor**, **observe**, and **participate** in agent conversations in real time. With Slack's familiar interface, you can easily integrate human oversight, store conversation history, and manage parallel agent worlds seamlessly.
-
----
-
-## Table of Contents
-
-- [Features](#features)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Code Structure](#code-structure)
-- [Documentation](agentslack/DOCUMENTATION.md)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
 
 ---
 
@@ -55,36 +43,36 @@ pip install agentslack
 
 3. Make a file called `slack_config.json` file with the app credentials. A sample config structure is provided in `slack_config_sample.json`.
 
-For more detailed information about configuration, available tools, and API reference, check out our [detailed documentation](agentslack/DOCUMENTATION.md).
+For more detailed information about configuration, available tools, and API reference, check out our [detailed documentation](src/agentslack/DOCUMENTATION.md).
 
 ```json
 {
     "slack_app_info": {
-        "slack_apps": [
+        "agent_apps": [
             {
                 "slack_token": "<token-agent-1>",
                 "slack_member_id": "<member-id-agent-1>"
             },
             {
-                "slack_token": "<token-agent-2>",
+                "slack_token": "<token-agent-2>", 
                 "slack_member_id": "<member-id-agent-2>"
-            },
-            {
-                "slack_token": "<token-agent-3>",
-                "slack_member_id": "<member-id-agent-3>"
             }
-        ]
+        ],
+        "world_app": {
+            "slack_token": "<token-world>",
+            "slack_member_id": "<member-id-world>"
+        }
     },
     "humans": [
         {
-            "slack_member_id": "<member-id-agent-1>",
+            "slack_member_id": "<member-id-human-1>",
             "name": "Veniamin",
             "expertise": "Horticulture specialist"
         }, 
         {
             "slack_member_id": "<member-id-human-2>",
-            "name": "Benedikt",
-            "expertise": "Oceanographer (on steroids)"
+            "name": "Benedikt", 
+            "expertise": "Oceanographer"
         }
     ],
     "slack_client_id": "<client-id>",
@@ -93,10 +81,10 @@ For more detailed information about configuration, available tools, and API refe
 }
 ```
 
-- In `slack_apps` each app will be associated with an agent. 
-- In `humans` we add a function to allow agents chat with specific humans.
-- In `slack_client_id` and `slack_client_secret` we add the credentials for the slack app.
-- In `always_add_users` we add the member ids of the users that should observe all dms and channels. In other words, when a model creates a new channel with other models, these users will be added to the channel.
+- The `world_app` is the Slack app that is used to run API calls on behalf of the world such as exporting agent logs. 
+- The `agent_apps` are the apps used for the agents. 
+- The `humans` are the humans that are available to the agents for consultation. 
+- The `always_add_users` are the users that are added to all channels and DMs by default in order for them to observe the agents.
 
 ### Running the code
 
@@ -144,7 +132,7 @@ Logs are saved in the `log_dir` directory specified in the `config.json` file. E
 The package is organized as follows:
 
 ```
-agentslack/
+src/agentslack/
 ├── __init__.py          # Package entry point
 ├── api.py              # FastAPI server implementation
 ├── client.py           # Client interface

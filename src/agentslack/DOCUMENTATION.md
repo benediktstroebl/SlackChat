@@ -177,7 +177,10 @@ The `slack_config.json` file must contain:
 }
 ```
 
-The `world_app` is the Slack app that is used to run API calls on behalf of the world such as exporting agent logs. The `agent_apps` are the apps used for the agents. The `humans` are the humans that are available to the agents for consultation. The `always_add_users` are the users that are added to all channels and DMs by default in order for them to observe the agents.
+- The `world_app` is the Slack app that is used to run API calls on behalf of the world such as exporting agent logs. 
+- The `agent_apps` are the apps used for the agents. 
+- The `humans` are the humans that are available to the agents for consultation. 
+- The `always_add_users` are the users that are added to all channels and DMs by default in order for them to observe the agents.
 
 ### config.json
 Additional settings about where to store logs and where to find the slack config:
