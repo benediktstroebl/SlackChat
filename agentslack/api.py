@@ -446,7 +446,11 @@ class Server:
                     channel_name=parameters["channel_name"],
                 )
                 
-                self.registry.register_channel(parameters["your_name"], response['channel']['id'], parameters["channel_name"])
+                self.registry.register_channel(
+                    agent_name=parameters["your_name"], 
+                    channel_name=parameters["channel_name"], 
+                    channel_id=response['channel']['id']
+                )
                 return response
             
             elif tool_name == "add_member_to_channel":
