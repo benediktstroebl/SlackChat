@@ -19,14 +19,18 @@
         {
             "slack_member_id": "<member-id-agent-1>",
             "name": "Veniamin",
-            "expertise": "Horticulture specialist"
+            "expertise": "Horticulture specialist",
+            "additional_info": {
+                "hobbies": "managing slack agents."
+            }
         }, 
         {
             "slack_member_id": "<member-id-human-2>",
             "name": "Benedikt",
             "expertise": "Oceanographer (on steroids)",
             "additional_info": {
-                
+                "favorite_color": "blue",
+                "hobbies": "slack god."
             }
         }
     ],
