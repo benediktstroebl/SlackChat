@@ -6,7 +6,7 @@ from datetime import datetime
 from copy import deepcopy
 from agentslack.Slack import Slack
 from agentslack.validate import validate_configs
-from agentslack.types_ import Agent, Channel, World, Message, SlackApp, Human
+from agentslack.types import Agent, Channel, World, Message, SlackApp, Human
 
 class RegistryError(Exception):
     """Base exception for registry errors"""
@@ -110,7 +110,9 @@ class Registry:
 
     def get_agent_name_from_id(self, slack_app_id: str) -> str:
         return self._app_agent_mapping[slack_app_id]
-
+    
+    def get_agent_names(self) -> List[str]:
+        return list(self._agent_name_mapping.keys())
 
     def get_human_name_from_id(self, slack_app_id: str) -> str:
         for human in self._humans:
@@ -142,7 +144,11 @@ class Registry:
 
     def agent_exists(self, agent_name: str) -> bool:
         """Check if an agent exists"""
-        return agent_name in self._agents
+        return agent_name in self._agent_name_mapping
+    
+    def human_exists(self, human_name: str) -> bool:
+        """Check if a human exists"""
+        return human_name in self.get_human_names()
 
     def register_human_in_world(self, world_name: str, human_id: str, slack_app_id: str) -> None:
         """Register a human in a world with their Slack user ID mapping"""
