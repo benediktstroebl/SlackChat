@@ -21,7 +21,6 @@
 - [Documentation](agentslack/DOCUMENTATION.md)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
-- [License](#license)
 
 ---
 
@@ -167,6 +166,9 @@ agentslack/
 - [ ] **Replying to messages in a thread**: Allow agents to reply to messages in a thread. 
 - [ ] **agentdiscord?**: Allow agents to use Discord instead of Slack. 
 
+## Contributing
+
+We welcome contributions from the community! Please reach out to us via [sage.cs.princeton.edu](https://sage.cs.princeton.edu) if you are interested in contributing.
 
 ## Star History
 
