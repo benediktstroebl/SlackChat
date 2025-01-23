@@ -170,20 +170,16 @@ class Server:
                     return self.return_agent_doesnt_exist_error(parameters["your_name"])
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 channel_name = parameters["channel_name"]
-                channels = self.registry.get_agent(parameters["your_name"]).channels
-                channel_names = [channel.name for channel in channels]
-                if channel_name not in channel_names:
-                    response = "Sorry this channel doesn't exist, you can create a new channel with the create_channel tool."
-                    response += "Here is a list of all the channels you have access to: " + str(channel_names)
-                else: 
-                    channel_id = self.registry.get_channel(channel_name).slack_id
-                    response = slack_client.send_messsage(
-                        message=parameters["message"],
-                        target_channel_id=channel_id
-                    )
-                    # update the agent's channel with this message
-                    self._update_agent_read_messages(parameters["your_name"], channel_id, [Message(message=parameters["message"], channel_id=channel_id, user_id=parameters["your_name"], timestamp=time.time(), agent_name=parameters["your_name"])])
-                    self.update_channels(parameters["your_name"])
+                if not self.channel_exists(parameters["your_name"], channel_name):
+                    return self.channel_doesnt_exist_error(channel_name)
+                channel_id = self.registry.get_channel(channel_name).slack_id
+                response = slack_client.send_messsage(
+                    message=parameters["message"],
+                    target_channel_id=channel_id
+                )
+                # update the agent's channel with this message
+                self._update_agent_read_messages(parameters["your_name"], channel_id, [Message(message=parameters["message"], channel_id=channel_id, user_id=parameters["your_name"], timestamp=time.time(), agent_name=parameters["your_name"])])
+                self.update_channels(parameters["your_name"])
                 return response
 
             elif tool_name == "list_channels":
@@ -197,6 +193,9 @@ class Server:
                 if not self.agent_exists(parameters["your_name"]):
                     return self.return_agent_doesnt_exist_error(parameters["your_name"])
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
+                if not self.channel_exists(parameters["your_name"], parameters["channel_name"]):
+                    return self.channel_doesnt_exist_error(parameters["channel_name"])
+
                 channel_id = self.registry.get_channel(parameters["channel_name"]).slack_id
 
                 # TODO add error if the channel doesn't exist
@@ -346,13 +345,15 @@ class Server:
                 return humans
             
             elif tool_name == "send_message_to_human":
+                if not self.agent_exists(parameters["your_name"]):
+                    return self.return_agent_doesnt_exist_error(parameters["your_name"])
+                
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
                 # get the human id 
+                if not self.human_exists(parameters["human_name"]):
+                    return self.return_human_doesnt_exist_error(parameters["human_name"])
                 
                 human_id = self.registry.get_human(parameters["human_name"]).slack_member_id
-
-                if parameters["human_name"] not in self.registry.get_human_names():
-                    return f"The human '{parameters['human_name']}' does not exist, here are possible humans: {self.registry.get_human_names()}"
 
                 response = slack_client.open_conversation(user_ids=[human_id])
                 if response['ok']:
@@ -395,16 +396,22 @@ class Server:
                 return response
             
             elif tool_name == "add_member_to_channel":
+
                 agent = self.registry.get_agent(parameters["your_name"])
                 
-                if parameters["member_to_add"] not in self.registry.get_all_agent_names():
-                    if parameters["member_to_add"] in self.registry.get_human_names():
+                if not self.agent_exists(parameters["your_name"]):
+                    return self.return_agent_doesnt_exist_error(parameters["your_name"])
+
+                if not self.agent_exists(parameters["member_to_add"]):
+                    if self.human_exists(parameters["member_to_add"]):
                         return f"You are trying to add a human to a channel. You can't add humans to a channel directly. Ask the human directly to join."
                     else:
-                        return f"The member '{parameters['member_to_add']}' does not exist, here are the names of all agents: {self.registry.get_all_agent_names()}"
+                        return self.return_agent_doesnt_exist_error(parameters["member_to_add"])
                 else:
                     other_agent = self.registry.get_agent(parameters["member_to_add"])
                 
+                if not self.channel_exists(parameters["your_name"], parameters["channel_name"]):
+                    return self.channel_doesnt_exist_error(parameters["channel_name"])
                 
                 channel = self.registry.get_channel(parameters["channel_name"])
                 
@@ -465,11 +472,23 @@ class Server:
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
 
+    def channel_exists(self, agent_name: str, channel_name: str) -> bool:
+        channels = self.registry.get_agent(agent_name).channels
+        channel_names = [channel.name for channel in channels]
+        if channel_name not in channel_names:
+            return False
+        return True
+
     def agent_exists(self, agent_name: str) -> bool:
         return self.registry.agent_exists(agent_name)
     
     def human_exists(self, human_name: str) -> bool:
         return self.registry.human_exists(human_name)
+    
+    def channel_doesnt_exist_error(self, channel_names: List[str]) -> str:
+        response = "Sorry this channel doesn't exist, you can create a new channel with the create_channel tool."
+        response += "Here is a list of all the channels you have access to: " + str(channel_names)
+        return response
 
     def return_agent_doesnt_exist_error(self, agent_name: str, sender: bool = False) -> str:
         if sender:
