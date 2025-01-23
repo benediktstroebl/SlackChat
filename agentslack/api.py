@@ -406,8 +406,13 @@ class Server:
             
             elif tool_name == "send_message_to_human":
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client
-
+                # get the human id 
+                
                 human_id = self.registry.get_human(parameters["human_name"]).slack_member_id
+
+                if parameters["human_name"] not in self.registry.get_all_human_names():
+                    return f"The human '{parameters['human_name']}' does not exist, here are possible humans: {self.registry.get_all_human_names()}"
+
                 response = slack_client.open_conversation(user_ids=[human_id])
                 if response['ok']:
                     channel_id = response['channel']['id']
@@ -419,7 +424,15 @@ class Server:
                     target_channel_id=channel_id
                 )
                 # update the agent's channel with this message
-                self._update_agent_read_messages(parameters["your_name"], channel_id, [Message(message=parameters["message"], channel_id=channel_id, user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id, timestamp=time.time(), agent_name=parameters["your_name"])])
+                self._update_agent_read_messages(
+                    parameters["your_name"], 
+                    channel_id, 
+                    [Message(
+                        message=parameters["message"], 
+                        channel_id=channel_id, 
+                        user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id, 
+                        timestamp=time.time(), 
+                        agent_name=parameters["your_name"])])
                 return response
             
             elif tool_name == "create_channel":
@@ -430,12 +443,6 @@ class Server:
                 )
                 
                 self.registry.register_channel(parameters["your_name"], response['channel']['id'], parameters["channel_name"])
-                return response
-            
-            elif tool_name == "open_conversation":
-                response = self.slack.open_conversation(
-                    user_ids=parameters["user_ids"]
-                )
                 return response
             
             elif tool_name == "add_member_to_channel":
