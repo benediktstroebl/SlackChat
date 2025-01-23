@@ -60,8 +60,8 @@ class Server:
                     "message": "string",
                 }
             ),
-            "read_dm": Tool(
-                name="read_dm",
+            "read_direct_message": Tool(
+                name="read_direct_message",
                 description="Read a direct message",
                 parameters={
                     "your_name": "string",
@@ -307,7 +307,7 @@ class Server:
                 self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
                 return messages
             
-            elif tool_name == "read_dm":
+            elif tool_name == "read_direct_message":
                 if parameters["your_name"] not in self.registry.get_all_agent_names():
                     return f"Your name is incorrect, here are possible variants for your name: {self.registry.get_all_agent_names()}"
                 if parameters["sender_name"] not in self.registry.get_all_agent_names() and parameters["sender_name"] not in self.registry.get_human_names():

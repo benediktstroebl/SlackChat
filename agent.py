@@ -42,14 +42,14 @@ def send_message_to_channel(message: str, your_name: str, channel_name: str) -> 
     return agentslack.call_tool("send_message_to_channel", message=message, your_name=your_name, channel_name=channel_name)
 
 @tool
-def read_dm(your_name: str, sender_name: str) -> str:
+def read_direct_message(your_name: str, sender_name: str) -> str:
     """
     Read a direct message from another agent.
     Args:
         your_name: The name of the agent reading the message.
         sender_name: The name of the agent sending the message.
     """
-    return agentslack.call_tool("read_dm", your_name=your_name, sender_name=sender_name)
+    return agentslack.call_tool("read_direct_message", your_name=your_name, sender_name=sender_name)
 
 @tool
 def read_channel(your_name: str, channel_name: str) -> str:
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     name = sys.argv[1] if len(sys.argv) > 1 else "a1"
     prompt = sys.argv[2] if len(sys.argv) > 2 else "You are agent a1. Communicate with other agents and use available tools."
     model = LiteLLMModel(model_id="gpt-4o-mini")
-    a1 = ToolCallingAgent(tools=[send_direct_message, list_channels, send_message_to_channel, read_dm, read_channel], model=model, max_steps=3, stream_json_logs=True, json_logs_path=f"{name}.jsonl")
+    a1 = ToolCallingAgent(tools=[send_direct_message, list_channels, send_message_to_channel, read_direct_message, read_channel], model=model, max_steps=3, stream_json_logs=True, json_logs_path=f"{name}.jsonl")
     a1.run(prompt)
 
 
