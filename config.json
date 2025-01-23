@@ -1,0 +1,5 @@
+
+{
+    "slack_config": "slack_config.json",
+    "log_dir": "logs"
+}
