@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Set, Dict
+from typing import Set, Dict, Union
 from collections import defaultdict
 from agentslack.Slack import Slack
 from datetime import datetime
@@ -16,6 +16,7 @@ class Human:
 class Message:
     message: str
     channel_id: str
+    channel_name: str 
     user_id: str
     agent_name: str 
     timestamp: str
@@ -36,7 +37,6 @@ class SlackApp:
 class Channel:
     slack_id: str
     name: str 
-
 
 @dataclass
 class Agent:

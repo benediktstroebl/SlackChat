@@ -10,7 +10,7 @@ class Client:
         self.port = port
         self.base_url = f"http://{host}:{port}"
         self.server = None
-        
+
 
     def start(self):
         """Start a new server instance"""
