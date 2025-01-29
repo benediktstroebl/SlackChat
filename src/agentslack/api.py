@@ -24,7 +24,7 @@ class WorldRegistration(BaseModel):
 
 class AgentRegistration(BaseModel):
     agent_name: str
-    world_name: str
+    world_name: str 
 
 class HistoryExport(BaseModel):
     world_name: str
