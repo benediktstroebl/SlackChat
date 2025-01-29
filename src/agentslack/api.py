@@ -143,6 +143,10 @@ class Server:
                         return self.return_agent_doesnt_exist_error(parameters["recipient_name"])
                 if not self.agent_exists(parameters["your_name"]):
                     return self.return_agent_doesnt_exist_error(parameters["your_name"])
+                
+                # Check if agents are in the same world
+                if not self.are_agents_in_same_world(parameters["your_name"], parameters["recipient_name"]):
+                    return f"Recipient {parameters['recipient_name']} does not exist. Here are possible agents: {self.registry.get_all_agent_names(self.registry.get_agent(parameters['your_name']).world_name)}"
 
                 self.update_channels(parameters["your_name"])
                 agent = self.registry.get_agent(parameters["your_name"])
@@ -180,16 +184,22 @@ class Server:
                 channel_name = parameters["channel_name"]
                 if not self.channel_exists(parameters["your_name"], channel_name):
                     return self.channel_doesnt_exist_error(agent_name=parameters["your_name"], channel_name=channel_name)
-                channel_id = self.registry.get_channel(channel_name).slack_id
+                
+                # Get channel and verify it belongs to agent's world
+                channel = self.registry.get_channel(channel_name)
+                agent = self.registry.get_agent(parameters["your_name"])
+                if channel.slack_id not in self.registry._channels_to_world or self.registry._channels_to_world[channel.slack_id] != agent.world_name:
+                    return self.channel_doesnt_exist_error(agent_name=parameters["your_name"], channel_name=channel_name)
+                
                 response = slack_client.send_messsage(
                     message=parameters["message"],
-                    target_channel_id=channel_id,
+                    target_channel_id=channel.slack_id,
                     username=parameters["your_name"]
                 )
                 # update the agent's channel with this message
-                self._update_agent_read_messages(parameters["your_name"], channel_id, [Message(
+                self._update_agent_read_messages(parameters["your_name"], channel.slack_id, [Message(
                     message=parameters["message"], 
-                    channel_id=channel_id, 
+                    channel_id=channel.slack_id, 
                     user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
                     timestamp=datetime.now().timestamp(), 
                     agent_name=parameters["your_name"])])
@@ -202,6 +212,14 @@ class Server:
                 self.update_channels(parameters["your_name"])
                 slack_client = self.registry.get_agent(parameters["your_name"]).slack_client    
                 response = slack_client.list_channels()
+                
+                # Filter channels to only show ones from agent's world
+                agent = self.registry.get_agent(parameters["your_name"])
+                filtered_channels = []
+                for channel in response['channels']:
+                    if channel['id'] in self.registry._channels_to_world and self.registry._channels_to_world[channel['id']] == agent.world_name:
+                        filtered_channels.append(channel)
+                response['channels'] = filtered_channels
                 return response['channels']
             
             elif tool_name == "read_channel":
@@ -212,33 +230,39 @@ class Server:
                 if not self.channel_exists(parameters["your_name"], parameters["channel_name"]):
                     return self.channel_doesnt_exist_error(agent_name=parameters["your_name"], channel_name=parameters["channel_name"])
 
-                channel_id = self.registry.get_channel(parameters["channel_name"]).slack_id
+                channel = self.registry.get_channel(parameters["channel_name"])
+                
+                # Verify channel belongs to agent's world
+                agent = self.registry.get_agent(parameters["your_name"])
+                if channel.slack_id not in self.registry._channels_to_world or self.registry._channels_to_world[channel.slack_id] != agent.world_name:
+                    return self.channel_doesnt_exist_error(agent_name=parameters["your_name"], channel_name=parameters["channel_name"])
 
-                # TODO add error if the channel doesn't exist
-                response = slack_client.read(channel_id=channel_id)
+                # TODO: add error if the channel doesn't exist
+                response = slack_client.read(channel_id=channel.slack_id)
                 
                 # TODO: this can also be because there are no messages in the channel.
                 if len(response['messages']) == 0:
                     return "You are not a member of this channel, you can't read it."
                 
-                agent = self.registry.get_agent(parameters["your_name"])
+                # Filter messages by world start time
                 world_start_datetime = self.registry.get_world(agent.world_name).start_datetime
-                # restrict to messages after the world start datetime 
-                messages = response['messages']
-                messages = [msg for msg in messages if datetime.fromtimestamp(float(msg['ts'])).timestamp() > world_start_datetime]
-                if len(messages) == 0:
+                filtered_messages = [msg for msg in response['messages'] if datetime.fromtimestamp(float(msg['ts'])).timestamp() > world_start_datetime]
+                
+                if len(filtered_messages) == 0:
                     return "There are no messages in this channel after the world start datetime."
-                print(messages)
+                
+                # Convert filtered messages to Message objects
                 messages = [
                     Message(
                         message=message['text'], 
-                        channel_id=channel_id, 
+                        channel_id=channel.slack_id, 
                         user_id=self.registry.get_agent(parameters["your_name"]).slack_app.slack_id,  
                         timestamp=datetime.fromtimestamp(float(message['ts'])).timestamp(), 
                         agent_name=self.extract_username_from_message(message)    
-                    ) for message in messages]
-                # update the agent's channel with these messages
-                self._update_agent_read_messages(parameters["your_name"], channel_id, messages)
+                    ) for message in filtered_messages]
+                
+                # Update the agent's channel with these messages
+                self._update_agent_read_messages(parameters["your_name"], channel.slack_id, messages)
                 return messages
             
             elif tool_name == "read_direct_message":
@@ -335,7 +359,7 @@ class Server:
                     msgs_after = [msg for msg in messages if datetime.fromtimestamp(float(msg['ts'])).timestamp() >= world_start_datetime]
                     if len(msgs_after) == 0:
                         continue
-                    print(msgs_after)
+                    
                     # convert to Message objects 
                     msgs_new = []
                     for msg in msgs_after:
@@ -416,7 +440,6 @@ class Server:
                 return response
             
             elif tool_name == "add_member_to_channel":
-
                 agent = self.registry.get_agent(parameters["your_name"])
                 
                 if not self.agent_exists(parameters["your_name"]):
@@ -427,6 +450,11 @@ class Server:
                         return f"You are trying to add a human to a channel. You can't add humans to a channel directly. Ask the human directly to join."
                     else:
                         return self.return_agent_doesnt_exist_error(parameters["member_to_add"])
+                
+                # Check if agents are in the same world
+                if not self.are_agents_in_same_world(parameters["your_name"], parameters["member_to_add"]):
+                    return f"You cannot add {parameters['member_to_add']} because it does not exist. Here are possible agents: {self.registry.get_all_agent_names(self.registry.get_agent(parameters['your_name']).world_name)}"
+                    
                 else:
                     other_agent = self.registry.get_agent(parameters["member_to_add"])
                 
@@ -434,6 +462,11 @@ class Server:
                     return self.channel_doesnt_exist_error(agent_name=parameters["your_name"], channel_name=parameters["channel_name"])
                 
                 channel = self.registry.get_channel(parameters["channel_name"])
+                
+                # Check if member is already in the channel
+                channel_members = agent.slack_client.get_channel_members(channel.slack_id)['members']
+                if other_agent.slack_app.slack_id in channel_members:
+                    return f"{parameters['member_to_add']} is already a member of {parameters['channel_name']}"
                 
                 response = agent.slack_client.add_user_to_channel(
                     channel_id=channel.slack_id,
@@ -512,9 +545,21 @@ class Server:
     def human_exists(self, human_name: str) -> bool:
         return self.registry.human_exists(human_name)
     
+    def are_agents_in_same_world(self, agent1: str, agent2: str) -> bool:
+        """Check if two agents are in the same world"""
+        if not (self.agent_exists(agent1) and self.agent_exists(agent2)):
+            return False
+        return self.registry.get_agent(agent1).world_name == self.registry.get_agent(agent2).world_name
+
     def channel_doesnt_exist_error(self, agent_name: str, channel_name: str=None) -> str:
-        channel_names = [channel.name for channel in self.registry.get_agent(agent_name).channels]
-        channel_names = [name for name in channel_names if ',' not in name]
+        agent = self.registry.get_agent(agent_name)
+        # Get all channels and filter by world
+        channel_names = []
+        for channel in agent.channels:
+            if channel.slack_id in self.registry._channels_to_world and self.registry._channels_to_world[channel.slack_id] == agent.world_name:
+                if ',' not in channel.name:  # Skip DM channels
+                    channel_names.append(channel.name)
+        
         channel_name = channel_name if channel_name else 'this channel'
         response = f"Sorry {channel_name} doesn't exist, you can create a new channel with the create_channel tool."
         if channel_names:
@@ -523,9 +568,9 @@ class Server:
 
     def return_agent_doesnt_exist_error(self, agent_name: str, sender: bool = False) -> str:
         if sender:
-            return f"The sender '{agent_name}' does not exist, here are possible agents: {self.registry.get_all_agent_names()}"
+            return f"The sender '{agent_name}' does not exist!"
         else:
-            return f"The agent '{agent_name}' does not exist, here are possible agents: {self.registry.get_all_agent_names()}"
+            return f"The agent '{agent_name}' does not exist!"
     
     def return_human_doesnt_exist_error(self, human_name: str) -> str:
         return f"The human '{human_name}' does not exist, here are possible humans: {self.registry.get_human_names()}"
@@ -586,7 +631,7 @@ class Server:
         log_dir = self.registry.config['log_dir']
         world_start_datetime = self.registry.get_world(agent.world_name).start_datetime
         
-        log_dir = os.path.join(log_dir, str(world_start_datetime))
+        log_dir = os.path.join(log_dir, agent.world_name + "_" + str(world_start_datetime))
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
             # save the slack config and the main config in root

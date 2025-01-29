@@ -47,6 +47,15 @@ response = agentslack.call_tool("add_member_to_channel",
 )
 print('[ADD MEMBER TO CHANNEL] - ', response)
 
+# Try to add Alice again (should fail)
+print('[ADD MEMBER TO CHANNEL AGAIN (SHOULD FAIL)]')
+response = agentslack.call_tool("add_member_to_channel",
+    channel_name="zoology-forum",
+    your_name="Bob",
+    member_to_add="Alice"
+)
+print('[ADD MEMBER TO CHANNEL AGAIN] - ', response)
+
 print('[SEND BROADCAST]')
 response = agentslack.call_tool("send_message_to_channel",
     message="Thanks for adding me to the channel!",
