@@ -29,6 +29,9 @@ class Registry:
         with open('config.json', 'r') as file:
             self.config = json.load(file)
 
+        self.always_return_messages = self.config['always_return_messages']
+        assert self.always_return_messages in [True, False], "always_return_messages must be True or False"
+
         # Validate configs
         validate_configs(self.slack_config, self.config)
 
@@ -55,7 +58,7 @@ class Registry:
         
         self.world_client = Slack(slack_token=self.slack_config['slack_app_info']['world_app']['slack_token'], always_add_users=self._always_add_users)
         self.world_token = self.slack_config['slack_app_info']['world_app']['slack_token']
-
+        self.world_member_id = self.slack_config['slack_app_info']['world_app']['slack_member_id']
 
         self._slack_apps: List[SlackApp] = [SlackApp(slack_token=app['slack_token'], slack_id=app['slack_member_id']) for app in  self.slack_config['slack_app_info']['agent_apps']]
         self._agent_app_mapping: Dict[str, str] = {} # agent_name -> slack_app_id
