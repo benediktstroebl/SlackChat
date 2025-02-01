@@ -2,7 +2,7 @@ import time
 from agentslack import AgentSlack
 
 # Create AgentSlack instance and start the server
-agentslack = AgentSlack(port=8080)
+agentslack = AgentSlack(port=8123)
 agentslack.start()
 
 # Register world and agents
