@@ -5,7 +5,7 @@ from .api import Tool, Server
 class Client:
     def __init__(self, 
                  host: str = "localhost", 
-                 port: int = 8000):
+                 port: int = 8080):
         self.host = host
         self.port = port
         self.base_url = f"http://{host}:{port}"

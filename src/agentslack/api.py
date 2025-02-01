@@ -214,7 +214,7 @@ class Server:
                 response = client.export_history(channel_names=channel_names, limit=request.limit)
                 
                 world_start_datetime = self.registry.get_world(request.world_name).start_datetime
-                print(f"[DEBUG] World start datetime: {world_start_datetime}")
+                
                 messages_to_return = []
                 for channel_id, channel_data in response.items():
                     for message in channel_data['messages']:
@@ -251,7 +251,7 @@ class Server:
         slack_client = agent.slack_client
 
         id_of_recipient = self.registry.get_agent(parameters["recipient_name"]).slack_app.slack_id
-        print(f"[DEBUG] Opening conversation with {parameters['recipient_name']}")
+        
         response = slack_client.open_conversation(user_ids=[id_of_recipient])
         if response['ok']:
             channel_id = response['channel']['id']
@@ -263,7 +263,7 @@ class Server:
             target_channel_id=channel_id,
             username=parameters["your_name"]
         )
-        print(f"[DEBUG] Updating channels for {parameters['your_name']}")
+        
         self.update_channels(parameters["your_name"])
         # update the agent's channel with this message
         self._update_agent_read_messages(parameters["your_name"], channel_id, [
@@ -304,6 +304,8 @@ class Server:
             timestamp=datetime.now().timestamp(), 
             agent_name=parameters["your_name"])])
         self.update_channels(parameters["your_name"])
+        
+        return response
 
     def list_channels(self, parameters: dict) -> dict:
         if not self.agent_exists(parameters["your_name"]):
@@ -538,8 +540,7 @@ class Server:
         self.registry.register_channel(
             agent_name=parameters["your_name"], 
             channel_name=parameters["channel_name"], 
-            channel_id=response['channel']['id'],
-            members=[]
+            channel_id=response['channel']['id']
         )
         return response
     
