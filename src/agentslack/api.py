@@ -399,6 +399,9 @@ class Server:
                 if (sender_id in members) and (receiver_id in members):
                     channel_id = channel['id']
                     break
+                
+        if channel_id is None:
+            return "You are not a part of any ongoing DMs with this agent."
 
         response = slack_client.read(channel_id=channel_id)
         if response.get('error'):
