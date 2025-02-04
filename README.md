@@ -168,7 +168,7 @@ We welcome contributions from the community! Please reach out to us via [sage.cs
 [![Star History Chart](https://api.star-history.com/svg?repos=pli-princeton/agentslack&type=Date)](https://star-history.com/#pli-princeton/agentslack&Date)
 
 <p align="center">
-<i>🎵 We thought we'd get stars (we've got 2 now!)<br>
+<i>🎵 We thought we'd get stars (we've got 3 now!)<br>
 Check out our track <a href="https://www.youtube.com/watch?v=gA-aNTHp3AQ" target="_blank">Slack God</a> - the flow makes you wonder how<br>
 No stars yet, but we're slacking with style<br>
 Agent chats stack up mile after mile <img src="static/mic-drop.gif" alt="mic drop" width="20"/></i>
